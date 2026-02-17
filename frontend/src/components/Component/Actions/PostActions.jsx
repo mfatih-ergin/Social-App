@@ -1,13 +1,18 @@
 import Like from "./Like";
 import CommentButton from "./CommentButton";
 import SaveButton from "./SaveButton";
+import RepostButton from "./RepostButton";
 
 export default function PostActions({
   postId,
   likedByCurrentUser,
   likesCount,
   commentsCount,
+  repostsCount,
+  isRepostedByMe,
   onCommentClick,
+  onRepostClick,
+  onQuoteClick,
 }) {
   return (
     <div className="d-flex justify-content-between align-items-center pt-1">
@@ -21,6 +26,13 @@ export default function PostActions({
         <CommentButton
           commentsCount={commentsCount}
           onClick={(e) => onCommentClick(e)}
+        />
+
+        <RepostButton
+          repostsCount={repostsCount}
+          isReposted={isRepostedByMe}
+          onRepost={onRepostClick}
+          onQuote={onQuoteClick}
         />
       </div>
 

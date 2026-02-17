@@ -40,7 +40,15 @@ const getPosts = async (req, res) => {
     const userId = req.user._id.toString();
 
     const posts = await Post.find()
-      .populate("user", "username email")
+      .populate("user", "username email profileImage")
+      .populate({
+        path: "parentPost",
+        populate: { path: "user", select: "username profileImage" },
+      })
+      .populate({
+        path: "parentComment",
+        populate: { path: "user", select: "username profileImage" },
+      })
       .sort({ createdAt: -1 });
 
     const postsWithLikeInfo = posts.map((post) => {
@@ -54,10 +62,16 @@ const getPosts = async (req, res) => {
         _id: post._id,
         userId: post.user._id,
         username: post.user.username,
+        profileImage: post.user.profileImage,
         text: post.text,
         image: post.image ? `http://localhost:5000${post.image}` : null,
         likesCount: post.likes.length,
         commentsCount: post.commentsCount || 0,
+        repostsCount: post.repostsCount || 0,
+        isRepost: post.isRepost || false,
+        parentPost: post.parentPost || null,
+        parentComment: post.parentComment || null,
+
         likedByCurrentUser,
         isOwner: isOwner,
         createdAt: post.createdAt,
@@ -66,6 +80,7 @@ const getPosts = async (req, res) => {
 
     res.json(postsWithLikeInfo);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Postlar alınamadı" });
   }
 };
@@ -75,7 +90,15 @@ const getExplore = async (req, res) => {
     const userId = req.user?._id?.toString();
 
     const posts = await Post.find()
-      .populate("user", "username")
+      .populate("user", "username profileImage")
+      .populate({
+        path: "parentPost",
+        populate: { path: "user", select: "username profileImage" },
+      })
+      .populate({
+        path: "parentComment",
+        populate: { path: "user", select: "username profileImage" },
+      })
       .sort({ createdAt: -1 });
 
     const postsWithLikeInfo = posts.map((post) => {
@@ -89,10 +112,15 @@ const getExplore = async (req, res) => {
         _id: post._id,
         userId: post.user._id,
         username: post.user.username,
+        profileImage: post.user.profileImage,
         text: post.text,
         image: post.image ? `http://localhost:5000${post.image}` : null,
         likesCount: post.likes.length,
         commentsCount: post.commentsCount || 0,
+        repostsCount: post.repostsCount || 0,
+        isRepost: post.isRepost || false,
+        parentPost: post.parentPost || null,
+        parentComment: post.parentComment || null,
         likedByCurrentUser,
         isOwner: isOwner,
         createdAt: post.createdAt,
@@ -140,37 +168,53 @@ const likePost = async (req, res) => {
 
 const deletePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const { id } = req.params;
+    const post = await Post.findById(id);
 
     if (!post) {
       return res.status(404).json({ message: "Post bulunamadı" });
     }
 
-    const currentUserId = req.user.id || req.user._id;
+    const currentUserId = req.user._id || req.user.id;
     if (post.user.toString() !== currentUserId.toString()) {
-      return res.status(403).json({ message: "Yetkin yok" });
+      return res.status(403).json({ message: "Bu işlem için yetkiniz yok." });
+    }
+
+    if (post.isRepost) {
+      if (post.parentPost) {
+        await Post.findByIdAndUpdate(post.parentPost, {
+          $inc: { repostsCount: -1 },
+        });
+      } else if (post.parentComment) {
+        await Comment.findByIdAndUpdate(post.parentComment, {
+          $inc: { repostsCount: -1 },
+        });
+      }
     }
 
     if (post.image) {
-      const imagePath = path.join(process.cwd(), post.image);
-      fs.access(imagePath, fs.constants.F_OK, (err) => {
-        if (!err) {
-          fs.unlink(imagePath, (err) => {
-            if (err) console.error("Resim dosyası silinirken hata:", err);
-          });
-        }
-      });
+      const relativePath = post.image.startsWith("/")
+        ? post.image.substring(1)
+        : post.image;
+      const imagePath = path.join(process.cwd(), relativePath);
+
+      if (fs.existsSync(imagePath)) {
+        fs.unlink(imagePath, (err) => {
+          if (err) console.error("Resim dosyası silinirken hata:", err);
+        });
+      }
     }
 
-    const Comment = require("../models/Comment");
     await Comment.deleteMany({ post: post._id });
 
     await post.deleteOne();
 
-    res.status(200).json({ message: "Post ve bağlı tüm yorumlar silindi" });
+    res
+      .status(200)
+      .json({ message: "Post, bağlı yorumlar ve sayaçlar güncellendi." });
   } catch (error) {
-    console.error("Silme hatası:", error);
-    res.status(500).json({ message: "Post silinemedi" });
+    console.error("Silme işlemi sırasında hata:", error);
+    res.status(500).json({ message: "Sunucu hatası: Post silinemedi." });
   }
 };
 
@@ -232,6 +276,7 @@ const getPostById = async (req, res) => {
       ...post._doc,
       likesCount: post.likes ? post.likes.length : 0,
       commentsCount: post.commentsCount || 0,
+      repostsCount: post.repostsCount || 0,
 
       isOwner:
         currentUserId && postOwnerId
@@ -261,6 +306,14 @@ const getLikedContent = async (req, res) => {
 
     const likedPosts = await Post.find({ likes: userId })
       .populate("user", "username profileImage")
+      .populate({
+        path: "parentPost",
+        populate: { path: "user", select: "username profileImage" },
+      })
+      .populate({
+        path: "parentComment",
+        populate: { path: "user", select: "username profileImage" },
+      })
       .lean();
 
     const likedComments = await Comment.find({ likes: userId })
@@ -282,6 +335,10 @@ const getLikedContent = async (req, res) => {
         image: p.image ? `http://localhost:5000${p.image}` : null,
         likesCount: p.likes.length,
         commentsCount: p.commentsCount || 0,
+        repostsCount: p.repostsCount || 0,
+        isRepost: p.isRepost || false,
+        parentPost: p.parentPost || null,
+        parentComment: p.parentComment || null,
         likedByCurrentUser: likedByCurrentUser,
         isOwner: isOwner,
         createdAt: p.createdAt,
@@ -322,6 +379,58 @@ const getLikedContent = async (req, res) => {
   }
 };
 
+const repostContent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const text = req.body?.text || "";
+    const type = req.body?.type || "post";
+
+    const userId = req.user._id || req.user.id;
+
+    const newRepost = new Post({
+      user: userId,
+      text: text,
+      isRepost: true,
+    });
+
+    if (type === "post") {
+      const originalPost = await Post.findById(id);
+      if (!originalPost)
+        return res.status(404).json({ message: "Post bulunamadı" });
+
+      newRepost.parentPost = id;
+      await Post.findByIdAndUpdate(id, { $inc: { repostsCount: 1 } });
+    } else if (type === "comment") {
+      const originalComment = await Comment.findById(id);
+      if (!originalComment)
+        return res.status(404).json({ message: "Yorum bulunamadı" });
+
+      newRepost.parentComment = id;
+      await Comment.findByIdAndUpdate(id, { $inc: { repostsCount: 1 } });
+    }
+
+    await newRepost.save();
+
+    const populated = await newRepost.populate([
+      { path: "user", select: "username profileImage" },
+      {
+        path: "parentPost",
+        populate: { path: "user", select: "username profileImage" },
+      },
+      {
+        path: "parentComment",
+        populate: { path: "user", select: "username profileImage" },
+      },
+    ]);
+
+    res.status(201).json(populated);
+  } catch (error) {
+    console.error("BACKEND HATASI:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -331,4 +440,5 @@ module.exports = {
   /*getLikedPosts,*/
   getPostById,
   getLikedContent,
+  repostContent,
 };

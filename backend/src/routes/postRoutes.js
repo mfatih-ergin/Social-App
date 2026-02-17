@@ -9,6 +9,7 @@ const {
   /*getLikedPosts,*/
   getPostById,
   getLikedContent,
+  repostContent,
 } = require("../controllers/postController");
 const authMiddleware = require("../middleware/authMiddleware");
 const exploreAuthMiddleware = require("../middleware/exploreAuthMiddleware");
@@ -22,6 +23,12 @@ router.get("/explore", exploreAuthMiddleware, getExplore);
 
 // Yeni gönderi oluştur - Resim desteği upload middleware ile sağlanıyor
 router.post("/create", authMiddleware, upload.single("image"), createPost);
+router.post(
+  "/repost/:id",
+  authMiddleware,
+  upload.single("image"),
+  repostContent,
+);
 
 // Kullanıcının beğendiği gönderileri getir
 /*router.get("/user/:userId/likes", authMiddleware, getLikedPosts);*/

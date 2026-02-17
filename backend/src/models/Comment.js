@@ -16,13 +16,12 @@ const commentSchema = new mongoose.Schema(
     text: {
       type: String,
       trim: true,
-      // Eğer kullanıcı sadece resim atıyorsa metin zorunlu olmasın diyorsan:
       required: function () {
         return !this.image;
       },
     },
     image: {
-      type: String, // Resim URL'si burada saklanacak
+      type: String,
       default: null,
     },
     likes: [
@@ -38,6 +37,10 @@ const commentSchema = new mongoose.Schema(
       index: true,
     },
     repliesCount: {
+      type: Number,
+      default: 0,
+    },
+    repostsCount: {
       type: Number,
       default: 0,
     },

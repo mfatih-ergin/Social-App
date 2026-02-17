@@ -1,0 +1,29 @@
+.repost-card-mini {
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+/* Koyu Tema Hover */
+.repost-card-mini.hover-dark:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Açık Tema Hover */
+.repost-card-mini.hover-light:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Metni 3 satırda kesmek için (X tarzı) */
+.text-truncate-custom {
+    display: -webkit-box;
+    /*-webkit-line-clamp: 3;*/
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    font-size: 0.95rem;
+}
+
+.repost-mini-image img {
+    display: block;
+}

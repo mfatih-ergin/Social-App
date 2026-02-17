@@ -8,24 +8,25 @@ const postSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    text: {
-      type: String,
-      trim: true,
+    text: { type: String, trim: true },
+    image: { type: String, default: "" },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    commentsCount: { type: Number, default: 0 },
+
+    isRepost: { type: Boolean, default: false },
+
+    parentPost: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: null,
     },
-    image: {
-      type: String,
-      default: "",
+    parentComment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      default: null,
     },
-    likes: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    commentsCount: {
-      type: Number,
-      default: 0,
-    },
+
+    repostsCount: { type: Number, default: 0 },
   },
   {
     timestamps: true,
@@ -34,20 +35,26 @@ const postSchema = new mongoose.Schema(
   },
 );
 
-// Post silindiğinde o posta ait tüm yorumların da silinmesi için (Middleware)
 postSchema.pre("findOneAndDelete", async function (next) {
   const docToDel = await this.model.findOne(this.getQuery());
   if (docToDel) {
     await mongoose.model("Comment").deleteMany({ post: docToDel._id });
+
+    if (docToDel.isRepost) {
+      if (docToDel.parentPost) {
+        await mongoose.model("Post").findByIdAndUpdate(docToDel.parentPost, {
+          $inc: { repostsCount: -1 },
+        });
+      } else if (docToDel.parentComment) {
+        await mongoose
+          .model("Comment")
+          .findByIdAndUpdate(docToDel.parentComment, {
+            $inc: { repostsCount: -1 },
+          });
+      }
+    }
   }
   next();
-});
-
-// Sanal Alan: Postun yorumlarını çekmek istersen kullanabilirsin
-postSchema.virtual("postComments", {
-  ref: "Comment",
-  localField: "_id",
-  foreignField: "post",
 });
 
 module.exports = mongoose.model("Post", postSchema);

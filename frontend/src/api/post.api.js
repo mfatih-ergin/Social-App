@@ -23,3 +23,5 @@ export const getLikedContent = (userId) =>
 export const getPostById = (postId) => {
   return api.get(`/posts/${postId}`);
 };
+
+export const repostContent = (postId) => api.post(`/posts/repost/${postId}`);
