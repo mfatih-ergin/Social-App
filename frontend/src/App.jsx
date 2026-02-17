@@ -50,7 +50,15 @@ function App() {
               <Route path="/explore" element={<Explore />} />
               <Route path="/profile/:id" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/post/:postId" element={<PostPage />} />
+              {/* <Route path="/post/:postId" element={<PostPage />} /> */}
+              <Route
+                path="/post/:contentId"
+                element={<PostPage type="post" />}
+              />
+              <Route
+                path="/comment/:contentId"
+                element={<PostPage type="comment" />}
+              />
             </Routes>
           </main>
         </div>

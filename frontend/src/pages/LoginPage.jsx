@@ -16,7 +16,6 @@ export default function LoginPage() {
     setError("");
     try {
       await login(email, password);
-      console.log(`Giriş başarılı: ${email}`);
       const response = await api.get("/auth/me");
       setUser(response.data);
 

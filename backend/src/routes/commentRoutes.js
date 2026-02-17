@@ -5,15 +5,19 @@ const {
   getComments,
   deleteComment,
   likeComment,
+  getCommentById,
+  getReplies,
 } = require("../controllers/commentController");
 const authMiddleware = require("../middleware/authMiddleware");
-const upload = require("../middleware/multerMiddleware"); // Ortak dosyadan çekiyoruz
+const upload = require("../middleware/multerMiddleware");
 
-// Yorum ekleme - Resim desteği aktif
 router.post("/:postId", authMiddleware, upload.single("image"), addComment);
 
-router.get("/:postId", /*authMiddleware,*/ getComments);
+router.get("/:postId", getComments);
 router.delete("/:id", authMiddleware, deleteComment);
 router.put("/:id/like", authMiddleware, likeComment);
+
+router.get("/detail/:id", getCommentById);
+router.get("/replies/:id", getReplies);
 
 module.exports = router;

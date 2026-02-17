@@ -21,11 +21,8 @@ app.use(
 );
 app.use(express.json());
 
-// Body Parser ayarları
-app.use(express.urlencoded({ extended: true })); // Form verilerini okumak için ekledik
+app.use(express.urlencoded({ extended: true }));
 
-// --- STATİK KLASÖR TANIMLAMASI ---
-// 'uploads' klasöründeki dosyalara http://localhost:5000/uploads/... şeklinde erişmeni sağlar
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoutes);

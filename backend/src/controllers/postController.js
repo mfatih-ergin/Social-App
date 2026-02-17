@@ -27,7 +27,7 @@ const createPost = async (req, res) => {
       text: post.text,
       image: post.image,
       likesCount: 0,
-      commentsCount: 0, // Yeni postta 0 yorum vardır
+      commentsCount: 0,
     });
   } catch (error) {
     console.error("Hata:", error);
@@ -57,7 +57,7 @@ const getPosts = async (req, res) => {
         text: post.text,
         image: post.image ? `http://localhost:5000${post.image}` : null,
         likesCount: post.likes.length,
-        commentsCount: post.commentsCount || 0, // BURASI EKLENDİ
+        commentsCount: post.commentsCount || 0,
         likedByCurrentUser,
         isOwner: isOwner,
         createdAt: post.createdAt,
@@ -92,7 +92,7 @@ const getExplore = async (req, res) => {
         text: post.text,
         image: post.image ? `http://localhost:5000${post.image}` : null,
         likesCount: post.likes.length,
-        commentsCount: post.commentsCount || 0, // BURASI EKLENDİ
+        commentsCount: post.commentsCount || 0,
         likedByCurrentUser,
         isOwner: isOwner,
         createdAt: post.createdAt,
@@ -138,39 +138,6 @@ const likePost = async (req, res) => {
   }
 };
 
-/*const deletePost = async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id);
-
-    if (!post) {
-      return res.status(404).json({ message: "Post bulunamadı" });
-    }
-
-    if (post.user.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Yetkin yok" });
-    }
-
-    if (post.image) {
-      const imagePath = path.join(process.cwd(), post.image);
-
-      fs.access(imagePath, fs.constants.F_OK, (err) => {
-        if (!err) {
-          fs.unlink(imagePath, (err) => {
-            if (err) console.error("Resim dosyası silinirken hata:", err);
-          });
-        }
-      });
-    }
-
-    await post.deleteOne();
-
-    res.status(204).end();
-  } catch (error) {
-    console.error("Silme hatası:", error);
-    res.status(500).json({ message: "Post silinemedi" });
-  }
-};*/
-
 const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -179,13 +146,11 @@ const deletePost = async (req, res) => {
       return res.status(404).json({ message: "Post bulunamadı" });
     }
 
-    // Yetki kontrolü (req.user.id veya _id hangsini kullanıyorsan ona dikkat)
     const currentUserId = req.user.id || req.user._id;
     if (post.user.toString() !== currentUserId.toString()) {
       return res.status(403).json({ message: "Yetkin yok" });
     }
 
-    // 1. ADIM: Postun resmini klasörden sil
     if (post.image) {
       const imagePath = path.join(process.cwd(), post.image);
       fs.access(imagePath, fs.constants.F_OK, (err) => {
@@ -197,16 +162,11 @@ const deletePost = async (req, res) => {
       });
     }
 
-    // 2. ADIM: Posta bağlı tüm yorumları sil (KRİTİK EKLEME)
-    // Comment modelinin yukarıda require edildiğinden emin ol
     const Comment = require("../models/Comment");
     await Comment.deleteMany({ post: post._id });
 
-    // 3. ADIM: Postun kendisini sil
     await post.deleteOne();
 
-    // 204 dönerken frontend'e bazen boş obje dönmek daha iyidir
-    // veya başarı mesajı için 200 kullanabilirsin.
     res.status(200).json({ message: "Post ve bağlı tüm yorumlar silindi" });
   } catch (error) {
     console.error("Silme hatası:", error);
@@ -232,7 +192,7 @@ const getLikedPosts = async (req, res) => {
         text: post.text,
         image: post.image ? `http://localhost:5000${post.image}` : null,
         likesCount: post.likes.length,
-        commentsCount: post.commentsCount || 0, // BURASI EKLENDİ
+        commentsCount: post.commentsCount || 0,
         likedByCurrentUser: currentUserId
           ? post.likes.some((id) => id.toString() === currentUserId)
           : false,
@@ -250,140 +210,43 @@ const getLikedPosts = async (req, res) => {
   }
 };
 
-// const getPostById = async (req, res) => {
-//   try {
-//     const userId = req.user._id.toString();
-
-//     // ID'ye göre postu bul ve kullanıcı bilgilerini çek
-//     const post = await Post.findById(req.params.id).populate(
-//       "user",
-//       "username email profileImage",
-//     );
-
-//     if (!post) {
-//       return res.status(404).json({ message: "Post bulunamadı" });
-//     }
-
-//     // Diğer listeleme fonksiyonlarındaki veri yapısının aynısını kuruyoruz
-//     const likedByCurrentUser = userId
-//       ? post.likes.some((id) => id.toString() === userId)
-//       : false;
-
-//     const isOwner = post.user._id.toString() === userId;
-
-//     const formattedPost = {
-//       _id: post._id,
-//       userId: post.user._id,
-//       username: post.user.username,
-//       profileImage: post.user.profileImage, // Varsa profil resmi
-//       text: post.text,
-//       image: post.image ? `http://localhost:5000${post.image}` : null,
-//       likesCount: post.likes.length,
-//       commentsCount: post.commentsCount || 0,
-//       likedByCurrentUser,
-//       isOwner: isOwner,
-//       createdAt: post.createdAt,
-//     };
-
-//     res.json(formattedPost);
-//   } catch (error) {
-//     console.error("Post getirme hatası:", error);
-//     res.status(500).json({ message: "Post alınamadı" });
-//   }
-// };
-
-/*const getPostById = async (req, res) => {
-  try {
-    // 1. Kullanıcı varsa ID'sini al, yoksa null bırak
-    // req.user?._id kullanmak, user undefined olsa bile hata vermesini engeller
-    const userId = req.user ? req.user._id.toString() : null;
-
-    // 2. ID'ye göre postu bul ve kullanıcı bilgilerini çek
-    const post = await Post.findById(req.params.id).populate(
-      "user",
-      "username email profileImage",
-    );
-
-    if (!post) {
-      return res.status(404).json({ message: "Post bulunamadı" });
-    }
-
-    // 3. likedByCurrentUser: Kullanıcı varsa ve beğenmişse true döner
-    const likedByCurrentUser = userId
-      ? post.likes.some((id) => id.toString() === userId)
-      : false;
-
-    // 4. isOwner: Kullanıcı varsa ve postun sahibi ise true döner
-    const isOwner = userId ? post.user._id.toString() === userId : false;
-
-    const formattedPost = {
-      _id: post._id,
-      userId: post.user._id,
-      username: post.user.username,
-      profileImage: post.user.profileImage,
-      text: post.text,
-      image: post.image ? `http://localhost:5000${post.image}` : null,
-      likesCount: post.likes.length,
-      commentsCount: post.commentsCount || 0,
-      likedByCurrentUser,
-      isOwner: isOwner,
-      createdAt: post.createdAt,
-    };
-
-    res.json(formattedPost);
-  } catch (error) {
-    console.error("Post getirme hatası:", error);
-    res.status(500).json({ message: "Post alınamadı" });
-  }
-};*/
-
 const getPostById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Postu bul ve kullanıcı bilgilerini çek
     const post = await Post.findById(id).populate(
       "user",
       "username profileImage",
     );
 
-    // 2. Eğer post yoksa güvenli bir şekilde 404 dön
     if (!post) {
       console.log(`Hata: ${id} ID'li post veritabanında mevcut değil.`);
       return res.status(404).json({ message: "Gönderi bulunamadı" });
     }
 
-    // 3. Kimlik tespiti (Middleware'den gelen)
     const currentUserId = req.user ? req.user.id || req.user._id : null;
 
-    // Post sahibi tespiti (Populate gelmezse userId fallback'i ile)
     const postOwnerId = post.user?._id || post.userId;
 
-    // 4. Veriyi Frontend'in beklediği formatta paketle
     const formattedPost = {
       ...post._doc,
-      // Sayısal değerlerin NaN olmasını engellemek için varsayılan değerler
       likesCount: post.likes ? post.likes.length : 0,
       commentsCount: post.commentsCount || 0,
 
-      // Sahiplik kontrolü
       isOwner:
         currentUserId && postOwnerId
           ? postOwnerId.toString() === currentUserId.toString()
           : false,
 
-      // Beğeni kontrolü
       likedByCurrentUser:
         currentUserId && post.likes
           ? post.likes.some((l) => l.toString() === currentUserId.toString())
           : false,
     };
 
-    // 5. Temiz veriyi gönder
     return res.status(200).json(formattedPost);
   } catch (error) {
     console.error("Post getirme hatası (Server):", error);
-    // Eğer ID formatı yanlışsa (CastError) 404 dönmesi daha mantıklıdır
     if (error.name === "CastError") {
       return res.status(404).json({ message: "Geçersiz gönderi kimliği" });
     }
@@ -393,20 +256,17 @@ const getPostById = async (req, res) => {
 
 const getLikedContent = async (req, res) => {
   try {
-    const { userId } = req.params; // Profiline bakılan kullanıcı ID'si
-    const currentUserId = req.user._id.toString(); // Giriş yapmış (senin) kullanıcı ID'n
+    const { userId } = req.params;
+    const currentUserId = req.user._id.toString();
 
-    // 1. Beğenilen Postları Çek
     const likedPosts = await Post.find({ likes: userId })
       .populate("user", "username profileImage")
       .lean();
 
-    // 2. Beğenilen Yorumları Çek
     const likedComments = await Comment.find({ likes: userId })
       .populate("user", "username profileImage")
       .lean();
 
-    // 3. Postları Formatla
     const formattedPosts = likedPosts.map((p) => {
       const likedByCurrentUser = p.likes.some(
         (id) => id.toString() === currentUserId,
@@ -429,7 +289,6 @@ const getLikedContent = async (req, res) => {
       };
     });
 
-    // 4. Yorumları Formatla
     const formattedComments = likedComments.map((c) => {
       const likedByCurrentUser = c.likes.some(
         (id) => id.toString() === currentUserId,
@@ -452,7 +311,6 @@ const getLikedContent = async (req, res) => {
       };
     });
 
-    // 5. Birleştir ve Tarihe Göre Sırala
     const allLiked = [...formattedPosts, ...formattedComments].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     );

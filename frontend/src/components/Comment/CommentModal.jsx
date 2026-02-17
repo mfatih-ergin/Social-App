@@ -85,11 +85,14 @@ export default function CommentModal({ post, isOpen, onClose, onSubmit }) {
 
               {post.text && <p className="mt-1 mb-2">{post.text}</p>}
 
-              {/* Post Resmi: Backend URL eksikliği giderildi */}
               {post.image && (
                 <div className="modal-post-image-container mb-2">
                   <img
-                    src={`http://localhost:5000${post.image}`}
+                    src={
+                      post.image.startsWith("http")
+                        ? post.image
+                        : `http://localhost:5000${post.image}`
+                    }
                     alt="post"
                     className="img-fluid rounded-3 border border-secondary border-opacity-25"
                   />

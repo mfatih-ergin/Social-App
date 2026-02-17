@@ -36,3 +36,20 @@ export const deleteComment = (commentId) => {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   });
 };
+
+export const getCommentById = (commentId) => {
+  return axios.get(`${API_URL}/detail/${commentId}`, {
+    // Backend'de /detail/:commentId yapmanı öneririm çakışmaması için
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+};
+
+export const getReplies = (commentId) => {
+  return axios.get(`${API_URL}/replies/${commentId}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+};
