@@ -11,6 +11,7 @@ import UserInfo from "../Component/UserInfo";
 import PostContent from "../Component/PostContent";
 import PostActions from "../Component/Actions/PostActions";
 import CommentModal from "../Comment/CommentModal";
+import QuoteModal from "../Component/QuoteModal";
 import RepostCard from "./RepostCard";
 
 import "../../styles/PostCard.css";
@@ -93,9 +94,13 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
   const handleQuoteSubmit = async (quoteData) => {
     const { text, image } = quoteData;
     const formData = new FormData();
-    formData.append("text", text);
+
+    formData.append("text", text || "");
     formData.append("type", "post");
-    if (image) formData.append("image", image);
+
+    if (image) {
+      formData.append("image", image);
+    }
 
     try {
       await repostContent(post._id, formData);
@@ -117,10 +122,12 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
       >
         <div className="card-body">
           {post.isRepost && !post.text && (
-            <div className="repost-indicator ms-5 mb-1 small text-secondary fw-bold">
+            <div className="repost-indicator mb-1 small text-secondary fw-bold d-flex align-items-center">
               <i className="bi bi-repeat me-2"></i>
-              {post.user?._id === user?._id ? "Sen" : post.user?.username}{" "}
-              repostladın
+              <span>
+                {post.user?._id === user?._id ? "Sen" : post.user?.username}{" "}
+                Repost
+              </span>
             </div>
           )}
 
@@ -138,16 +145,18 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
           </div>
 
           <div className="post-container">
-            {post.text && <PostContent text={post.text} image={post.image} />}
+            {(post.text || post.image) && (
+              <PostContent text={post.text} image={post.image} />
+            )}
 
             {post.isRepost && (
-              <div className="mt-2">
+              <div className="mt-2 quote-wrapper">
                 {post.parentPost ? (
                   <RepostCard post={post.parentPost} isComment={false} />
                 ) : post.parentComment ? (
                   <RepostCard post={post.parentComment} isComment={true} />
                 ) : (
-                  <div className="p-3 border rounded text-secondary small">
+                  <div className="p-3 border rounded text-secondary small italic">
                     Orijinal içerik silinmiş.
                   </div>
                 )}
@@ -168,7 +177,6 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
               likesCount={post.likesCount}
               commentsCount={post.commentsCount}
               repostsCount={post.repostsCount}
-              isRepostedByMe={post.isRepostedByMe}
               onCommentClick={handleCommentClick}
               onRepostClick={handleDirectRepost}
               onQuoteClick={handleQuoteClick}
@@ -184,14 +192,11 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
         onSubmit={handleCommentSubmit}
       />
 
-      <CommentModal
+      <QuoteModal
         post={post}
-        title="Gönderiyi Alıntıla"
-        buttonText="Alıntıla"
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
         onSubmit={handleQuoteSubmit}
-        isQuote={true}
       />
     </>
   );

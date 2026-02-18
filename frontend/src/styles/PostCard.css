@@ -108,6 +108,17 @@
   pointer-events: none;
 }
 
+.repost-indicator {
+  padding-left: 4px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+.repost-indicator i {
+  font-size: 16px;
+}
+
 /* --- MOBİL UYUM --- */
 @media (max-width: 576px) {
   .post-card {

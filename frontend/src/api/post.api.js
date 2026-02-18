@@ -24,4 +24,5 @@ export const getPostById = (postId) => {
   return api.get(`/posts/${postId}`);
 };
 
-export const repostContent = (postId) => api.post(`/posts/repost/${postId}`);
+export const repostContent = (postId, data) =>
+  api.post(`/posts/repost/${postId}`, data);

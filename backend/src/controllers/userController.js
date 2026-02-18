@@ -29,17 +29,42 @@ const getUserPosts = async (req, res) => {
         path: "parentPost",
         populate: { path: "user", select: "username profileImage" },
       })
+      .populate({
+        path: "parentComment",
+        populate: { path: "user", select: "username profileImage" },
+      })
       .sort({ createdAt: -1 });
 
     const formattedPosts = posts.map((post) => {
+      const formattedImage = post.image
+        ? post.image.startsWith("http")
+          ? post.image
+          : `http://localhost:5000${post.image}`
+        : null;
+
+      if (
+        post.parentPost &&
+        post.parentPost.image &&
+        !post.parentPost.image.startsWith("http")
+      ) {
+        post.parentPost.image = `http://localhost:5000${post.parentPost.image}`;
+      }
+      if (
+        post.parentComment &&
+        post.parentComment.image &&
+        !post.parentComment.image.startsWith("http")
+      ) {
+        post.parentComment.image = `http://localhost:5000${post.parentComment.image}`;
+      }
+
       return {
         _id: post._id,
-        userId: post.user._id,
-        username: post.user.username,
-        profileImage: post.user.profileImage,
+        userId: post.user?._id,
+        username: post.user?.username,
+        profileImage: post.user?.profileImage,
         text: post.text,
-        image: post.image ? `http://localhost:5000${post.image}` : null,
-        likesCount: post.likes.length,
+        image: formattedImage,
+        likesCount: post.likes ? post.likes.length : 0,
         commentsCount: post.commentsCount || 0,
         repostsCount: post.repostsCount || 0,
         isRepost: post.isRepost || false,
@@ -48,13 +73,14 @@ const getUserPosts = async (req, res) => {
         likedByCurrentUser: post.likes.some(
           (id) => id.toString() === currentUserId,
         ),
-        isOwner: post.user._id.toString() === currentUserId,
+        isOwner: post.user?._id.toString() === currentUserId,
         createdAt: post.createdAt,
       };
     });
 
     res.status(200).json(formattedPosts);
   } catch (error) {
+    console.error("getUserPosts Hatası:", error);
     res.status(500).json({ message: "Kullanıcı postları getirilemedi" });
   }
 };

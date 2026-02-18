@@ -11,16 +11,17 @@ export default function RepostCard({ post, isComment = false }) {
 
   if (!post) return null;
 
-  const source = post._doc || post;
+  const source = post?._doc || post;
 
-  const userData = source.user || source.userId;
-  const contentText = source.text;
-  const contentImage = source.image;
-  const createdAt = source.createdAt;
-  const id = source._id || source.id;
+  const userData = source?.user || source?.userId;
+  const contentText = source?.text || "";
+  const contentImage = source?.image || "";
+  const createdAt = source?.createdAt;
+  const id = source?._id || source?.id;
 
   const handleCardClick = (e) => {
     e.stopPropagation();
+    if (!id) return;
     const targetPath = isComment ? `/comment/detail/${id}` : `/post/${id}`;
     navigate(targetPath);
   };
@@ -48,21 +49,17 @@ export default function RepostCard({ post, isComment = false }) {
         </span>
         <span className="text-secondary small">·</span>
         <span className="text-secondary small">
-          {formatRelativeTime(createdAt)}
+          {createdAt ? formatRelativeTime(createdAt) : ""}
         </span>
       </div>
 
       <div className="repost-mini-body">
-        {contentText ? (
+        {contentText.trim() && (
           <p
             className="small mb-1 text-truncate-custom"
             style={{ whiteSpace: "pre-wrap" }}
           >
             {contentText}
-          </p>
-        ) : (
-          <p className="small mb-1 text-muted opacity-50 italic">
-            İçerik yüklenemedi
           </p>
         )}
 
@@ -79,6 +76,12 @@ export default function RepostCard({ post, isComment = false }) {
               style={{ maxHeight: "150px", width: "100%", objectFit: "cover" }}
             />
           </div>
+        )}
+
+        {!contentText.trim() && !contentImage && (
+          <p className="small mb-0 text-muted opacity-50 italic">
+            İçerik yüklenemedi veya boş.
+          </p>
         )}
       </div>
     </div>

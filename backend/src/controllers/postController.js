@@ -258,10 +258,16 @@ const getPostById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const post = await Post.findById(id).populate(
-      "user",
-      "username profileImage",
-    );
+    const post = await Post.findById(id)
+      .populate("user", "username profileImage")
+      .populate({
+        path: "parentPost",
+        populate: { path: "user", select: "username profileImage" },
+      })
+      .populate({
+        path: "parentComment",
+        populate: { path: "user", select: "username profileImage" },
+      });
 
     if (!post) {
       console.log(`Hata: ${id} ID'li post veritabanında mevcut değil.`);
@@ -269,11 +275,17 @@ const getPostById = async (req, res) => {
     }
 
     const currentUserId = req.user ? req.user.id || req.user._id : null;
-
     const postOwnerId = post.user?._id || post.userId;
+
+    const formattedImage = post.image
+      ? post.image.startsWith("http")
+        ? post.image
+        : `http://localhost:5000${post.image}`
+      : null;
 
     const formattedPost = {
       ...post._doc,
+      image: formattedImage,
       likesCount: post.likes ? post.likes.length : 0,
       commentsCount: post.commentsCount || 0,
       repostsCount: post.repostsCount || 0,
@@ -385,12 +397,14 @@ const repostContent = async (req, res) => {
 
     const text = req.body?.text || "";
     const type = req.body?.type || "post";
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
 
     const userId = req.user._id || req.user.id;
 
     const newRepost = new Post({
       user: userId,
       text: text,
+      image: imagePath,
       isRepost: true,
     });
 
@@ -426,7 +440,7 @@ const repostContent = async (req, res) => {
 
     res.status(201).json(populated);
   } catch (error) {
-    console.error("BACKEND HATASI:", error);
+    console.error("REPOST HATASI:", error);
     res.status(500).json({ message: error.message });
   }
 };

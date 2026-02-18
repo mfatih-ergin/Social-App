@@ -1,6 +1,7 @@
 import Like from "../Component/Actions/Like";
 import CommentButton from "../Component/Actions/CommentButton";
 import SaveButton from "../Component/Actions/SaveButton";
+import RepostButton from "../Component/Actions/RepostButton";
 
 export default function CommentActions({
   commentId,
@@ -8,18 +9,28 @@ export default function CommentActions({
   likesCount,
   repliesCount,
   onReplyClick,
+  repostsCount,
+  isRepostedByMe,
+  onRepostClick,
+  onQuoteClick,
 }) {
   return (
     <div className="d-flex justify-content-between align-items-center pt-1">
-      <div className="d-flex align-items-center gap-4">
+      <div className="d-flex align-items-center gap-4 w-100">
         <Like
           postId={commentId}
           likedByCurrentUser={likedByCurrentUser}
           likesCount={likesCount}
           isComment={true}
         />
-
         <CommentButton commentsCount={repliesCount} onClick={onReplyClick} />
+
+        <RepostButton
+          repostsCount={repostsCount}
+          isRepostedByMe={isRepostedByMe}
+          onRepost={onRepostClick}
+          onQuote={onQuoteClick}
+        />
       </div>
 
       <SaveButton isSavedInitial={false} />
