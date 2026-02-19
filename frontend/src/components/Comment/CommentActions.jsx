@@ -13,6 +13,7 @@ export default function CommentActions({
   isRepostedByMe,
   onRepostClick,
   onQuoteClick,
+  isSavedByMe,
 }) {
   return (
     <div className="d-flex justify-content-between align-items-center pt-1">
@@ -27,13 +28,17 @@ export default function CommentActions({
 
         <RepostButton
           repostsCount={repostsCount}
-          isRepostedByMe={isRepostedByMe}
+          isReposted={isRepostedByMe}
           onRepost={onRepostClick}
           onQuote={onQuoteClick}
         />
       </div>
 
-      <SaveButton isSavedInitial={false} />
+      <SaveButton
+        contentId={commentId}
+        isSavedInitial={isSavedByMe}
+        type="comment"
+      />
     </div>
   );
 }

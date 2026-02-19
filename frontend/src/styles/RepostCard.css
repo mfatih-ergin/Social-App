@@ -1,29 +1,36 @@
-.repost-card-mini {
-    transition: background-color 0.2s ease-in-out;
-    cursor: pointer;
-    overflow: hidden;
+/* RepostCard.css */
+
+.repost-ghost-view {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  /* Üst-Alt: 1.25rem | Sağ-Sol: 1rem (İstediğin boşluk) */
+  margin: 1.25rem 1rem;
+  /* Genişliği yanlardaki boşluğa göre ayarlar */
+  width: calc(100% - 2rem);
+  display: block;
+  background: transparent !important;
+  border: none !important;
 }
 
-/* Koyu Tema Hover */
-.repost-card-mini.hover-dark:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+.repost-ghost-view:hover {
+  opacity: 0.8;
 }
 
-/* Açık Tema Hover */
-.repost-card-mini.hover-light:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-}
-
-/* Metni 3 satırda kesmek için (X tarzı) */
-.text-truncate-custom {
-    display: -webkit-box;
-    /*-webkit-line-clamp: 3;*/
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.4;
-    font-size: 0.95rem;
+.repost-text-clean {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .repost-mini-image img {
-    display: block;
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  border: none;
 }

@@ -1,14 +1,17 @@
 import { useTheme } from "../../context/ThemeContext";
 
-export default function ProfileTabs({ activeTab, setActiveTab }) {
+export default function ProfileTabs({ activeTab, setActiveTab, isOwnProfile }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const tabs = [
     { id: "posts", label: "Gönderiler" },
     { id: "likes", label: "Beğenilenler" },
-    { id: "saved", label: "Kaydedilenler" },
   ];
+
+  if (isOwnProfile) {
+    tabs.push({ id: "saved", label: "Kaydedilenler" });
+  }
 
   return (
     <div className={`px-4 border-bottom ${isDark ? "border-secondary" : ""}`}>
@@ -22,12 +25,13 @@ export default function ProfileTabs({ activeTab, setActiveTab }) {
                     ? "active bg-transparent text-white border-bottom border-primary border-3"
                     : "active bg-transparent fw-bold border-bottom border-dark border-3"
                   : isDark
-                    ? "text-secondary"
-                    : "text-muted"
+                    ? "text-secondary hover-dark-tab"
+                    : "text-muted hover-light-tab"
               }`}
               style={{
                 backgroundColor: "transparent",
                 transition: "color 0.2s, border-bottom 0.2s",
+                fontWeight: activeTab === tab.id ? "600" : "400",
               }}
               onClick={() => setActiveTab(tab.id)}
             >

@@ -58,4 +58,15 @@ commentSchema.virtual("replies", {
   foreignField: "parentComment",
 });
 
+// commentSchema.pre("findOneAndDelete", async function (next) {
+//   const commentId = this.getQuery()._id;
+//   try {
+//     const Post = mongoose.model("Post");
+//     await Post.deleteMany({ parentComment: commentId, isRepost: true });
+//     next();
+//   } catch (err) {
+//     next(err);
+//   }
+// });
+
 module.exports = mongoose.model("Comment", commentSchema);

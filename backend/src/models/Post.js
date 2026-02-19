@@ -35,7 +35,7 @@ const postSchema = new mongoose.Schema(
   },
 );
 
-postSchema.pre("findOneAndDelete", async function (next) {
+/*postSchema.pre("findOneAndDelete", async function (next) {
   const docToDel = await this.model.findOne(this.getQuery());
   if (docToDel) {
     await mongoose.model("Comment").deleteMany({ post: docToDel._id });
@@ -55,6 +55,34 @@ postSchema.pre("findOneAndDelete", async function (next) {
     }
   }
   next();
+});
+*/
+
+postSchema.pre("findOneAndDelete", async function () {
+  // Silinmek üzere olan dökümanı buluyoruz
+  const docToDel = await this.model.findOne(this.getQuery());
+
+  if (docToDel) {
+    // 1. Posta ait yorumları temizle
+    await mongoose.model("Comment").deleteMany({ post: docToDel._id });
+
+    // 2. Eğer bu bir repost ise, orijinal içeriğin sayacını düşür
+    if (docToDel.isRepost) {
+      if (docToDel.parentPost) {
+        // Orijinal Postun sayacını azalt
+        await mongoose.model("Post").findByIdAndUpdate(docToDel.parentPost, {
+          $inc: { repostsCount: -1 },
+        });
+      } else if (docToDel.parentComment) {
+        // Orijinal Yorumun sayacını azalt
+        await mongoose
+          .model("Comment")
+          .findByIdAndUpdate(docToDel.parentComment, {
+            $inc: { repostsCount: -1 },
+          });
+      }
+    }
+  }
 });
 
 module.exports = mongoose.model("Post", postSchema);

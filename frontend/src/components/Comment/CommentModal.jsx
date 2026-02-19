@@ -19,7 +19,6 @@ export default function CommentModal({ post, isOpen, onClose, onSubmit }) {
 
   if (!isOpen || !post) return null;
 
-  // Veri derinliği fark etmeksizin ismi ve ID'yi güvenli bir şekilde alıyoruz
   const postUsername = post.username || post.user?.username || "Kullanıcı";
   const postUserId = post.userId || post.user?._id || post.user?.id;
   const postProfileImage = post.profileImage || post.user?.profileImage;
@@ -59,7 +58,6 @@ export default function CommentModal({ post, isOpen, onClose, onSubmit }) {
         </div>
 
         <div className="modal-body-custom px-3 pb-3">
-          {/* Yanıt Verilen Post Bölümü */}
           <div className="parent-post-section d-flex gap-3">
             <div className="d-flex flex-column align-items-center">
               <Avatar
@@ -106,7 +104,6 @@ export default function CommentModal({ post, isOpen, onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Kendi Yanıt Bölümümüz */}
           <div className="my-reply-section d-flex gap-3">
             <div className="d-flex flex-column align-items-center">
               <Avatar

@@ -52,11 +52,9 @@ export default function CommentCard({
   const handleRepostClick = async () => {
     if (!currentUser) return navigate("/login");
 
-    const formData = new FormData();
-    formData.append("type", "comment");
-
     try {
-      await repostContent(comment._id, formData);
+      await repostContent(comment._id, { type: "comment" });
+
       onUpdate?.();
     } catch (error) {
       console.error("Yorum repost hatası:", error);
@@ -128,6 +126,13 @@ export default function CommentCard({
         style={{ cursor: !isDetailView ? "pointer" : "default" }}
       >
         <div className="card-body">
+          {comment.isRepostedByMe && (
+            <div className="repost-indicator mb-1 small text-secondary fw-bold d-flex align-items-center ms-5">
+              <i className="bi bi-repeat me-2"></i>
+              <span>Repost</span>
+            </div>
+          )}
+
           <div className="d-flex justify-content-between align-items-center mb-2">
             <UserInfo
               userId={comment.userId || comment.user?._id}
@@ -165,6 +170,7 @@ export default function CommentCard({
               isRepostedByMe={comment.isRepostedByMe}
               onRepostClick={handleRepostClick}
               onQuoteClick={handleQuoteClick}
+              isSavedByMe={comment.isSavedByMe}
             />
           </div>
         </div>
@@ -176,7 +182,6 @@ export default function CommentCard({
         onClose={() => setIsReplyModalOpen(false)}
         onSubmit={handleReplySubmit}
       />
-
       <QuoteModal
         post={comment}
         isOpen={isQuoteModalOpen}

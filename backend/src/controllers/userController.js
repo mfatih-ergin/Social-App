@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Post = require("../models/Post");
+const Save = require("../models/Save");
 
 const getUserProfile = async (req, res) => {
   try {
@@ -21,8 +22,19 @@ const getUserProfile = async (req, res) => {
 const getUserPosts = async (req, res) => {
   try {
     const { userId } = req.params;
-    const currentUserId = req.user._id.toString();
+    const currentUserId = req.user ? req.user._id.toString() : null;
 
+    // 1. Kaydedilenleri kontrol etmek için Set oluşturuyoruz
+    let savedPostIds = new Set();
+    let savedCommentIds = new Set();
+
+    if (currentUserId) {
+      const userSaves = await Save.find({ user: currentUserId });
+      savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
+      savedCommentIds = new Set(userSaves.map((s) => s.comment?.toString()));
+    }
+
+    // 2. Postları çekiyoruz
     const posts = await Post.find({ user: userId })
       .populate("user", "username profileImage")
       .populate({
@@ -35,46 +47,59 @@ const getUserPosts = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
+    // 3. Verileri tek tek formatlıyoruz
     const formattedPosts = posts.map((post) => {
-      const formattedImage = post.image
-        ? post.image.startsWith("http")
-          ? post.image
-          : `http://localhost:5000${post.image}`
-        : null;
+      const postObj = post._doc || post;
 
-      if (
-        post.parentPost &&
-        post.parentPost.image &&
-        !post.parentPost.image.startsWith("http")
-      ) {
-        post.parentPost.image = `http://localhost:5000${post.parentPost.image}`;
-      }
-      if (
-        post.parentComment &&
-        post.parentComment.image &&
-        !post.parentComment.image.startsWith("http")
-      ) {
-        post.parentComment.image = `http://localhost:5000${post.parentComment.image}`;
+      // PARENT (Alıntı/Repost) İçeriği Formatlama
+      let formattedParent = null;
+      const parentSource = postObj.parentPost || postObj.parentComment;
+
+      if (parentSource) {
+        const pData = parentSource._doc || parentSource;
+        const pId = pData._id.toString();
+
+        formattedParent = {
+          ...pData,
+          // Alıntılanan içeriğin beğeni sayısı (Senin eksik olan kısmın burasıydı)
+          likesCount: pData.likes ? pData.likes.length : 0,
+          likedByCurrentUser:
+            currentUserId && pData.likes
+              ? pData.likes.some((id) => id.toString() === currentUserId)
+              : false,
+          // Alıntılanan içerik kaydedilmiş mi?
+          isSavedByMe: postObj.parentPost
+            ? savedPostIds.has(pId)
+            : savedCommentIds.has(pId),
+          // Resim URL düzeltmesi
+          image: pData.image
+            ? pData.image.startsWith("http")
+              ? pData.image
+              : `http://localhost:5000${pData.image}`
+            : null,
+        };
       }
 
+      // Ana Postu Döndür
       return {
-        _id: post._id,
-        userId: post.user?._id,
-        username: post.user?.username,
-        profileImage: post.user?.profileImage,
-        text: post.text,
-        image: formattedImage,
-        likesCount: post.likes ? post.likes.length : 0,
-        commentsCount: post.commentsCount || 0,
-        repostsCount: post.repostsCount || 0,
-        isRepost: post.isRepost || false,
-        parentPost: post.parentPost || null,
-        parentComment: post.parentComment || null,
-        likedByCurrentUser: post.likes.some(
-          (id) => id.toString() === currentUserId,
-        ),
-        isOwner: post.user?._id.toString() === currentUserId,
-        createdAt: post.createdAt,
+        ...postObj,
+        userId: postObj.user?._id,
+        username: postObj.user?.username,
+        profileImage: postObj.user?.profileImage,
+        likesCount: postObj.likes ? postObj.likes.length : 0,
+        likedByCurrentUser:
+          currentUserId && postObj.likes
+            ? postObj.likes.some((id) => id.toString() === currentUserId)
+            : false,
+        isSavedByMe: savedPostIds.has(postObj._id.toString()),
+        isOwner: currentUserId
+          ? postObj.user?._id?.toString() === currentUserId
+          : false,
+        image: postObj.image ? `http://localhost:5000${postObj.image}` : null,
+
+        // Formatlanmış parent yapılarını yerleştir
+        parentPost: postObj.parentPost ? formattedParent : null,
+        parentComment: postObj.parentComment ? formattedParent : null,
       };
     });
 

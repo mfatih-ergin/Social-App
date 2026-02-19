@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getUserPosts } from "../../api/user.api";
 import { getLikedContent } from "../../api/post.api";
+import { getSavedContent } from "../../api/save.api";
 import { useTheme } from "../../context/ThemeContext";
 import PostCard from "../Post/PostCard";
 import CommentCard from "../Comment/CommentCard";
@@ -24,12 +25,27 @@ export default function ProfileContent({
 
     setLoading(true);
     try {
-      const res =
-        activeTab === "posts"
-          ? await getUserPosts(id)
-          : await getLikedContent(id);
+      let res;
+      if (activeTab === "posts") {
+        res = await getUserPosts(id);
+      } else if (activeTab === "likes") {
+        res = await getLikedContent(id);
+      } else if (activeTab === "saved") {
+        res = await getSavedContent();
+      }
 
-      setData(res.data || []);
+      if (activeTab === "saved") {
+        const flattenedData = (res.data || [])
+          .map((item) => {
+            if (item.post) return { ...item.post, isComment: false };
+            if (item.comment) return { ...item.comment, isComment: true };
+            return null;
+          })
+          .filter(Boolean);
+        setData(flattenedData);
+      } else {
+        setData(res.data || []);
+      }
     } catch (err) {
       console.error("Content yükleme hatası:", err);
       setData([]);
@@ -39,38 +55,28 @@ export default function ProfileContent({
   };
 
   useEffect(() => {
-    if (activeTab !== "saved" && id) {
+    if (id) {
       loadData();
     }
   }, [id, activeTab]);
 
-  if (activeTab === "saved") {
-    return (
-      <>
+  return (
+    <div className="d-flex flex-column gap-3">
+      {activeTab === "saved" && (
         <ProfileSavedCollections
           activeCollection={activeCollection}
           setActiveCollection={setActiveCollection}
           collections={collections}
         />
-        <div
-          className={`text-center py-5 ${isDark ? "text-secondary" : "text-muted"}`}
-        >
-          <i className="bi bi-folder2-open fs-1"></i>
-          <h5 className="mt-3">"{activeCollection}" Klasörü Boş</h5>
-        </div>
-      </>
-    );
-  }
+      )}
 
-  return (
-    <div className="d-flex flex-column gap-3">
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border spinner-border-sm text-primary"></div>
         </div>
       ) : data.length > 0 ? (
         data.map((item) => {
-          if (item.isComment) {
+          if (item.isComment || item.comment) {
             return (
               <CommentCard
                 key={item._id}
@@ -91,9 +97,19 @@ export default function ProfileContent({
           className={`text-center py-5 ${isDark ? "text-secondary" : "text-muted"}`}
         >
           <i
-            className={`bi ${activeTab === "posts" ? "bi-chat-square-text" : "bi-heart-break"} fs-1`}
+            className={`bi ${
+              activeTab === "posts"
+                ? "bi-chat-square-text"
+                : activeTab === "likes"
+                  ? "bi-heart-break"
+                  : "bi-folder2-open"
+            } fs-1`}
           ></i>
-          <p className="mt-2">Henüz içerik bulunamadı.</p>
+          <p className="mt-2">
+            {activeTab === "saved"
+              ? `"${activeCollection}" klasörü henüz boş.`
+              : "Henüz içerik bulunamadı."}
+          </p>
         </div>
       )}
     </div>

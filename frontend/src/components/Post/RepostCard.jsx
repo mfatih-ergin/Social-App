@@ -11,9 +11,13 @@ export default function RepostCard({ post, isComment = false }) {
 
   if (!post) return null;
 
-  const source = post?._doc || post;
+  const source = post._doc || post;
 
-  const userData = source?.user || source?.userId;
+  const userData = source?.user || {};
+  const username = userData?.username || source?.username || "Kullanıcı";
+  const profileImage = userData?.profileImage || source?.profileImage;
+  const userId = userData?._id || userData?.id || source?.userId;
+
   const contentText = source?.text || "";
   const contentImage = source?.image || "";
   const createdAt = source?.createdAt;
@@ -22,6 +26,7 @@ export default function RepostCard({ post, isComment = false }) {
   const handleCardClick = (e) => {
     e.stopPropagation();
     if (!id) return;
+
     const targetPath = isComment ? `/comment/detail/${id}` : `/post/${id}`;
     navigate(targetPath);
   };
@@ -29,42 +34,30 @@ export default function RepostCard({ post, isComment = false }) {
   return (
     <div
       onClick={handleCardClick}
-      className={`repost-card-mini border rounded-3 mt-2 p-2 ${
-        isDark
-          ? "border-secondary border-opacity-50 hover-dark"
-          : "border-light-subtle hover-light"
-      }`}
+      className={`repost-ghost-view ${isDark ? "text-white" : "text-dark"}`}
+      style={{ position: "relative", zIndex: 10 }}
     >
-      <div className="d-flex align-items-center gap-2 mb-1">
-        <Avatar
-          userId={userData?._id || userData?.id}
-          profileImage={userData?.profileImage}
-          size="20px"
-        />
+      <div className="d-flex align-items-center gap-2 mb-2">
+        <Avatar userId={userId} profileImage={profileImage} size="22px" />
         <span
           className="fw-bold small text-truncate"
-          style={{ maxWidth: "150px" }}
+          style={{ maxWidth: "180px" }}
         >
-          {userData?.username || "Kullanıcı"}
+          {username}
         </span>
         <span className="text-secondary small">·</span>
-        <span className="text-secondary small">
+        <span className="text-secondary" style={{ fontSize: "0.8rem" }}>
           {createdAt ? formatRelativeTime(createdAt) : ""}
         </span>
       </div>
 
-      <div className="repost-mini-body">
+      <div className="repost-body-clean">
         {contentText.trim() && (
-          <p
-            className="small mb-1 text-truncate-custom"
-            style={{ whiteSpace: "pre-wrap" }}
-          >
-            {contentText}
-          </p>
+          <p className="repost-text-clean mb-2">{contentText}</p>
         )}
 
         {contentImage && (
-          <div className="repost-mini-image mt-2">
+          <div className="repost-mini-image mb-0 overflow-hidden rounded-3">
             <img
               src={
                 contentImage.startsWith("http")
@@ -72,15 +65,21 @@ export default function RepostCard({ post, isComment = false }) {
                   : `http://localhost:5000${contentImage}`
               }
               alt="repost content"
-              className="img-fluid rounded-2 border border-secondary border-opacity-10"
-              style={{ maxHeight: "150px", width: "100%", objectFit: "cover" }}
+              style={{
+                width: "auto",
+                height: "auto",
+                maxWidth: "100%",
+                maxHeight: "350px",
+                objectFit: "contain",
+                display: "block",
+              }}
             />
           </div>
         )}
 
         {!contentText.trim() && !contentImage && (
-          <p className="small mb-0 text-muted opacity-50 italic">
-            İçerik yüklenemedi veya boş.
+          <p className="small mb-0 text-muted opacity-50 fst-italic">
+            İçerik yüklenemedi.
           </p>
         )}
       </div>

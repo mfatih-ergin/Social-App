@@ -1,10 +1,12 @@
+/* QuoteModal.css */
+
 .quote-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background-color: rgba(91, 112, 131, 0.4);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -18,16 +20,51 @@
   border-radius: 16px;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-.quote-preview-container {
-  border: 1px solid rgba(128, 128, 128, 0.3);
-  border-radius: 12px;
-  overflow: hidden;
-  pointer-events: none; /* Modal içindeyken tıklanmasın */
+
+.quote-original-preview {
+  margin-top: 10px;
 }
 
-/* Dark mod ayarı */
-.quote-modal-overlay.dark {
-  background: rgba(91, 112, 131, 0.4);
+
+.quote-original-preview .repost-mini-image {
+  width: 100%;
+  max-height: 250px; 
+  display: flex;
+  justify-content: flex-start; 
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.quote-original-preview .repost-mini-image img {
+  width: auto;         
+  height: auto;       
+  max-width: 100%;     
+  max-height: 250px;  
+  object-fit: contain; 
+  display: block;
+}
+
+.quote-modal-content.bg-black {
+  background-color: #000 !important;
+  border: 1px solid #333639;
+}
+
+.btn-primary.rounded-pill {
+  background-color: #1d9bf0;
+  border: none;
+}
+
+.btn-primary.rounded-pill:disabled {
+  opacity: 0.5;
+}
+
+.quote-modal-content::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 576px) {
+  .quote-modal-overlay { padding-top: 0; }
+  .quote-modal-content { height: 100vh; border-radius: 0; }
 }

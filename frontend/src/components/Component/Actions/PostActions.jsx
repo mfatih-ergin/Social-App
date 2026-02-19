@@ -13,6 +13,7 @@ export default function PostActions({
   onCommentClick,
   onRepostClick,
   onQuoteClick,
+  isSavedByMe,
 }) {
   return (
     <div className="d-flex justify-content-between align-items-center pt-1">
@@ -36,7 +37,7 @@ export default function PostActions({
         />
       </div>
 
-      <SaveButton isSavedInitial={false} />
+      <SaveButton contentId={postId} isSavedInitial={isSavedByMe} type="post" />
     </div>
   );
 }

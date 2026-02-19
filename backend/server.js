@@ -9,6 +9,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const postRoutes = require("./src/routes/postRoutes");
 const commentRoutes = require("./src/routes/commentRoutes");
 const userRoutes = require("./src/routes/userRoutes");
+const saveRoutes = require("./src/routes/save.routes");
 
 const app = express();
 connectDB();
@@ -30,6 +31,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/comment", commentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/saves", saveRoutes);
 
 app.get("/", (req, res) => {
   res.send("API ÇALIŞIYOR 🚀");

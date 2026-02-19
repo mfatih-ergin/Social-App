@@ -1,7 +1,93 @@
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
+const Save = require("../models/Save");
 const fs = require("fs");
 const path = require("path");
+
+const formatPostData = async (post, userId, savedPostIds, savedCommentIds) => {
+  const postObj = post._doc || post;
+  const pIdStr = postObj._id.toString();
+
+  // 1. MANTIK: Eğer bu postun kendisi zaten bir REPOST ise ve sahibi BEN SEM, bu zaten "repostlanmış" demektir.
+  const isMyDirectRepost =
+    postObj.isRepost &&
+    userId &&
+    postObj.user?._id?.toString() === userId &&
+    !postObj.text; // Alıntı değilse
+
+  let isRepostedByMe = false;
+
+  if (isMyDirectRepost) {
+    isRepostedByMe = true;
+  } else if (userId) {
+    // 2. MANTIK: Eğer orijinal bir post/yorum ise, ben bunu repostladım mı?
+    const repostExists = await Post.findOne({
+      user: userId,
+      isRepost: true,
+      text: "", // Düz repost kontrolü
+      image: "",
+      $or: [{ parentPost: pIdStr }, { parentComment: pIdStr }],
+    });
+    isRepostedByMe = !!repostExists;
+  }
+
+  const likedByCurrentUser =
+    userId && postObj.likes
+      ? postObj.likes.some((id) => id.toString() === userId)
+      : false;
+
+  const isOwner =
+    userId && postObj.user?._id
+      ? postObj.user?._id?.toString() === userId
+      : false;
+  const isSavedByMe = savedPostIds.has(pIdStr);
+
+  // Alıntılanan içerik (Parent) işleme
+  let formattedParent = null;
+  const parentSource = postObj.parentPost || postObj.parentComment;
+
+  if (parentSource) {
+    const parentIdStr = parentSource._id.toString();
+    const parentSavedByMe = postObj.parentPost
+      ? savedPostIds.has(parentIdStr)
+      : savedCommentIds.has(parentIdStr);
+
+    formattedParent = {
+      ...(parentSource._doc || parentSource),
+      likesCount: parentSource.likes ? parentSource.likes.length : 0,
+      likedByCurrentUser:
+        userId && parentSource.likes
+          ? parentSource.likes.some((id) => id.toString() === userId)
+          : false,
+      isSavedByMe: parentSavedByMe,
+      image: parentSource.image
+        ? parentSource.image.startsWith("http")
+          ? parentSource.image
+          : `http://localhost:5000${parentSource.image}`
+        : null,
+    };
+  }
+
+  return {
+    _id: postObj._id,
+    userId: postObj.user?._id,
+    username: postObj.user?.username,
+    profileImage: postObj.user?.profileImage,
+    text: postObj.text,
+    image: postObj.image ? `http://localhost:5000${postObj.image}` : null,
+    likesCount: postObj.likes ? postObj.likes.length : 0,
+    commentsCount: postObj.commentsCount || 0,
+    repostsCount: postObj.repostsCount || 0,
+    isRepost: postObj.isRepost || false,
+    isRepostedByMe: isRepostedByMe, // Artık hem orijinalde hem repost sayfasında true döner
+    parentPost: postObj.parentPost ? formattedParent : null,
+    parentComment: postObj.parentComment ? formattedParent : null,
+    likedByCurrentUser,
+    isSavedByMe,
+    isOwner: isOwner,
+    createdAt: postObj.createdAt,
+  };
+};
 
 const createPost = async (req, res) => {
   try {
@@ -38,6 +124,11 @@ const createPost = async (req, res) => {
 const getPosts = async (req, res) => {
   try {
     const userId = req.user._id.toString();
+    const userSaves = await Save.find({ user: userId });
+    const savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
+    const savedCommentIds = new Set(
+      userSaves.map((s) => s.comment?.toString()),
+    );
 
     const posts = await Post.find()
       .populate("user", "username email profileImage")
@@ -51,54 +142,15 @@ const getPosts = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    const postsWithLikeInfo = posts.map((post) => {
-      const likedByCurrentUser = userId
-        ? post.likes.some((id) => id.toString() === userId)
-        : false;
-      const isOwner = userId ? post.user._id.toString() === userId : false;
+    // Her post için asenkron hesaplama yapıyoruz
+    const postsWithInfo = await Promise.all(
+      posts.map((post) =>
+        formatPostData(post, userId, savedPostIds, savedCommentIds),
+      ),
+    );
 
-      let formattedParent = null;
-      const parentSource = post.parentPost || post.parentComment;
-
-      if (parentSource) {
-        formattedParent = {
-          ...(parentSource._doc || parentSource),
-          likesCount: parentSource.likes ? parentSource.likes.length : 0,
-          likedByCurrentUser:
-            userId && parentSource.likes
-              ? parentSource.likes.some((id) => id.toString() === userId)
-              : false,
-          image: parentSource.image
-            ? parentSource.image.startsWith("http")
-              ? parentSource.image
-              : `http://localhost:5000${parentSource.image}`
-            : null,
-        };
-      }
-
-      return {
-        _id: post._id,
-        userId: post.user?._id,
-        username: post.user?.username,
-        profileImage: post.user?.profileImage,
-        text: post.text,
-        image: post.image ? `http://localhost:5000${post.image}` : null,
-        likesCount: post.likes.length,
-        commentsCount: post.commentsCount || 0,
-        repostsCount: post.repostsCount || 0,
-        isRepost: post.isRepost || false,
-        parentPost: post.parentPost ? formattedParent : null,
-        parentComment: post.parentComment ? formattedParent : null,
-
-        likedByCurrentUser,
-        isOwner: isOwner,
-        createdAt: post.createdAt,
-      };
-    });
-
-    res.json(postsWithLikeInfo);
+    res.json(postsWithInfo);
   } catch (error) {
-    console.error("getPosts Hatası:", error);
     res.status(500).json({ message: "Postlar alınamadı" });
   }
 };
@@ -106,6 +158,14 @@ const getPosts = async (req, res) => {
 const getExplore = async (req, res) => {
   try {
     const userId = req.user?._id?.toString();
+    let savedPostIds = new Set();
+    let savedCommentIds = new Set();
+
+    if (userId) {
+      const userSaves = await Save.find({ user: userId });
+      savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
+      savedCommentIds = new Set(userSaves.map((s) => s.comment?.toString()));
+    }
 
     const posts = await Post.find()
       .populate("user", "username profileImage")
@@ -119,35 +179,14 @@ const getExplore = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    const postsWithLikeInfo = posts.map((post) => {
-      const likedByCurrentUser = userId
-        ? post.likes.some((id) => id.toString() === userId)
-        : false;
+    const postsWithInfo = await Promise.all(
+      posts.map((post) =>
+        formatPostData(post, userId, savedPostIds, savedCommentIds),
+      ),
+    );
 
-      const isOwner = userId ? post.user._id.toString() === userId : false;
-
-      return {
-        _id: post._id,
-        userId: post.user._id,
-        username: post.user.username,
-        profileImage: post.user.profileImage,
-        text: post.text,
-        image: post.image ? `http://localhost:5000${post.image}` : null,
-        likesCount: post.likes.length,
-        commentsCount: post.commentsCount || 0,
-        repostsCount: post.repostsCount || 0,
-        isRepost: post.isRepost || false,
-        parentPost: post.parentPost || null,
-        parentComment: post.parentComment || null,
-        likedByCurrentUser,
-        isOwner: isOwner,
-        createdAt: post.createdAt,
-      };
-    });
-
-    res.json(postsWithLikeInfo);
+    res.json(postsWithInfo);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Explore alınamadı" });
   }
 };
@@ -195,29 +234,52 @@ const likePost = async (req, res) => {
 const deletePost = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Postu bulalım
     const post = await Post.findById(id);
 
     if (!post) {
       return res.status(404).json({ message: "Post bulunamadı" });
     }
 
+    // Yetki kontrolü
     const currentUserId = req.user._id || req.user.id;
     if (post.user.toString() !== currentUserId.toString()) {
       return res.status(403).json({ message: "Bu işlem için yetkiniz yok." });
     }
 
-    if (post.isRepost) {
-      if (post.parentPost) {
-        await Post.findByIdAndUpdate(post.parentPost, {
-          $inc: { repostsCount: -1 },
+    const postComments = await Comment.find({ post: post._id });
+
+    for (const comment of postComments) {
+      if (comment.image) {
+        const isUsedElsewhere = await Comment.findOne({
+          image: comment.image,
+          _id: { $ne: comment._id },
         });
-      } else if (post.parentComment) {
-        await Comment.findByIdAndUpdate(post.parentComment, {
-          $inc: { repostsCount: -1 },
-        });
+        const isUsedInPosts = await Post.findOne({ image: comment.image });
+
+        if (!isUsedElsewhere && !isUsedInPosts) {
+          const commentImagePath = path.join(
+            process.cwd(),
+            comment.image.startsWith("/")
+              ? comment.image.slice(1)
+              : comment.image,
+          );
+          if (fs.existsSync(commentImagePath)) {
+            try {
+              fs.unlinkSync(commentImagePath);
+            } catch (err) {
+              console.error("Yorum resmi silinirken hata:", err);
+            }
+          }
+        }
       }
     }
 
+    // Yorum dökümanlarını sil
+    await Comment.deleteMany({ post: post._id });
+
+    // Postun kendi resmini sil
     if (post.image) {
       const isUsedElsewhereInPosts = await Post.findOne({
         image: post.image,
@@ -234,71 +296,28 @@ const deletePost = async (req, res) => {
         if (fs.existsSync(fullPath)) {
           try {
             fs.unlinkSync(fullPath);
-            console.log(
-              "Dosya başka yerde kullanılmadığı için sistemden silindi:",
-              fullPath,
-            );
           } catch (err) {
-            console.error("Dosya silme hatası:", err);
+            console.error("Post dosyası silme hatası:", err);
           }
         }
-      } else {
-        console.log(
-          "Dosya orijinal postta veya başka bir yerde kullanılıyor, fiziksel silme atlandı.",
-        );
       }
     }
 
-    await Comment.deleteMany({ post: post._id });
+    await Post.findByIdAndDelete(id);
 
-    await post.deleteOne();
-
-    res.status(200).json({ message: "Post başarıyla silindi." });
+    res.status(200).json({
+      message: "Post ve bağlı tüm içerikler başarıyla silindi.",
+    });
   } catch (error) {
     console.error("Silme işlemi sırasında hata:", error);
-    res.status(500).json({ message: "Sunucu hatası: Post silinemedi." });
-  }
-};
-
-const getLikedPosts = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const currentUserId = req.user._id.toString();
-
-    const likedPosts = await Post.find({ likes: userId })
-      .populate("user", "username profileImage")
-      .sort({ createdAt: -1 });
-
-    const formattedPosts = likedPosts.map((post) => {
-      return {
-        _id: post._id,
-        userId: post.user._id,
-        username: post.user.username,
-        profileImage: post.user.profileImage,
-        text: post.text,
-        image: post.image ? `http://localhost:5000${post.image}` : null,
-        likesCount: post.likes.length,
-        commentsCount: post.commentsCount || 0,
-        likedByCurrentUser: currentUserId
-          ? post.likes.some((id) => id.toString() === currentUserId)
-          : false,
-        isOwner: post.user._id.toString() === currentUserId,
-        createdAt: post.createdAt,
-      };
-    });
-
-    res.status(200).json(formattedPosts);
-  } catch (error) {
-    res.status(500).json({
-      message: "Beğenilen postlar getirilemedi",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Sunucu hatası: İşlem tamamlanamadı." });
   }
 };
 
 const getPostById = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?._id?.toString();
 
     const post = await Post.findById(id)
       .populate("user", "username profileImage")
@@ -311,69 +330,40 @@ const getPostById = async (req, res) => {
         populate: { path: "user", select: "username profileImage" },
       });
 
-    if (!post) {
-      console.log(`Hata: ${id} ID'li içerik Post koleksiyonunda yok.`);
-      return res.status(404).json({ message: "Gönderi bulunamadı" });
+    if (!post) return res.status(404).json({ message: "Gönderi bulunamadı" });
+
+    let savedPostIds = new Set();
+    let savedCommentIds = new Set();
+    if (userId) {
+      const userSaves = await Save.find({ user: userId });
+      savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
+      savedCommentIds = new Set(userSaves.map((s) => s.comment?.toString()));
     }
 
-    const currentUserId = req.user ? req.user.id || req.user._id : null;
-    const postOwnerId = post.user?._id || post.userId;
-
-    const formattedImage = post.image
-      ? post.image.startsWith("http")
-        ? post.image
-        : `http://localhost:5000${post.image}`
-      : null;
-
-    const formattedPost = {
-      ...post._doc,
-      image: formattedImage,
-      likesCount: post.likes ? post.likes.length : 0,
-      commentsCount: post.commentsCount || 0,
-      repostsCount: post.repostsCount || 0,
-
-      isOwner:
-        currentUserId && postOwnerId
-          ? postOwnerId.toString() === currentUserId.toString()
-          : false,
-
-      likedByCurrentUser:
-        currentUserId && post.likes
-          ? post.likes.some((l) => l.toString() === currentUserId.toString())
-          : false,
-    };
-
-    if (
-      formattedPost.parentPost &&
-      formattedPost.parentPost.image &&
-      !formattedPost.parentPost.image.startsWith("http")
-    ) {
-      formattedPost.parentPost.image = `http://localhost:5000${formattedPost.parentPost.image}`;
-    }
-    if (
-      formattedPost.parentComment &&
-      formattedPost.parentComment.image &&
-      !formattedPost.parentComment.image.startsWith("http")
-    ) {
-      formattedPost.parentComment.image = `http://localhost:5000${formattedPost.parentComment.image}`;
-    }
-
-    return res.status(200).json(formattedPost);
+    const formatted = await formatPostData(
+      post,
+      userId,
+      savedPostIds,
+      savedCommentIds,
+    );
+    res.status(200).json(formatted);
   } catch (error) {
-    console.error("Post getirme hatası (Server):", error);
-
-    if (error.name === "CastError") {
-      return res.status(404).json({ message: "Geçersiz gönderi kimliği" });
-    }
-
-    return res.status(500).json({ message: "Sunucu hatası" });
+    res.status(500).json({ message: "Sunucu hatası" });
   }
 };
 
 const getLikedContent = async (req, res) => {
   try {
     const { userId } = req.params;
-    const currentUserId = req.user._id.toString();
+    const currentUserId = req.user ? req.user._id.toString() : null;
+
+    let savedPostIds = new Set();
+    let savedCommentIds = new Set();
+    if (currentUserId) {
+      const userSaves = await Save.find({ user: currentUserId });
+      savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
+      savedCommentIds = new Set(userSaves.map((s) => s.comment?.toString()));
+    }
 
     const likedPosts = await Post.find({ likes: userId })
       .populate("user", "username profileImage")
@@ -391,53 +381,54 @@ const getLikedContent = async (req, res) => {
       .populate("user", "username profileImage")
       .lean();
 
-    const formattedPosts = likedPosts.map((p) => {
-      const likedByCurrentUser = p.likes.some(
-        (id) => id.toString() === currentUserId,
-      );
-      const isOwner = p.user?._id?.toString() === currentUserId;
+    const formatItem = (item, isCommentType) => {
+      let formattedParent = null;
+      const parentSource = item.parentPost || item.parentComment;
+
+      if (parentSource) {
+        formattedParent = {
+          ...parentSource,
+          likesCount: parentSource.likes ? parentSource.likes.length : 0,
+          likedByCurrentUser:
+            currentUserId && parentSource.likes
+              ? parentSource.likes.some((id) => id.toString() === currentUserId)
+              : false,
+          isSavedByMe: item.parentPost
+            ? savedPostIds.has(parentSource._id.toString())
+            : savedCommentIds.has(parentSource._id.toString()),
+          image: parentSource.image
+            ? parentSource.image.startsWith("http")
+              ? parentSource.image
+              : `http://localhost:5000${parentSource.image}`
+            : null,
+        };
+      }
 
       return {
-        _id: p._id,
-        userId: p.user?._id,
-        username: p.user?.username,
-        profileImage: p.user?.profileImage,
-        text: p.text,
-        image: p.image ? `http://localhost:5000${p.image}` : null,
-        likesCount: p.likes.length,
-        commentsCount: p.commentsCount || 0,
-        repostsCount: p.repostsCount || 0,
-        isRepost: p.isRepost || false,
-        parentPost: p.parentPost || null,
-        parentComment: p.parentComment || null,
-        likedByCurrentUser: likedByCurrentUser,
-        isOwner: isOwner,
-        createdAt: p.createdAt,
-        isComment: false,
+        ...item,
+        userId: item.user?._id,
+        username: item.user?.username,
+        profileImage: item.user?.profileImage,
+        likesCount: item.likes ? item.likes.length : 0,
+        likedByCurrentUser: currentUserId
+          ? item.likes.some((id) => id.toString() === currentUserId)
+          : false,
+        isSavedByMe: isCommentType
+          ? savedCommentIds.has(item._id.toString())
+          : savedPostIds.has(item._id.toString()),
+        isComment: isCommentType,
+        image: item.image
+          ? item.image.startsWith("http")
+            ? item.image
+            : `http://localhost:5000${item.image}`
+          : null,
+        parentPost: item.parentPost ? formattedParent : null,
+        parentComment: item.parentComment ? formattedParent : null,
       };
-    });
+    };
 
-    const formattedComments = likedComments.map((c) => {
-      const likedByCurrentUser = c.likes.some(
-        (id) => id.toString() === currentUserId,
-      );
-      const isOwner = c.user?._id?.toString() === currentUserId;
-
-      return {
-        _id: c._id,
-        userId: c.user?._id,
-        username: c.user?.username,
-        profileImage: c.user?.profileImage,
-        text: c.text,
-        image: c.image ? `http://localhost:5000${c.image}` : null,
-        likesCount: c.likes.length,
-        repliesCount: 0,
-        likedByCurrentUser: likedByCurrentUser,
-        isOwner: isOwner,
-        createdAt: c.createdAt,
-        isComment: true,
-      };
-    });
+    const formattedPosts = likedPosts.map((p) => formatItem(p, false));
+    const formattedComments = likedComments.map((c) => formatItem(c, true));
 
     const allLiked = [...formattedPosts, ...formattedComments].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
@@ -446,7 +437,7 @@ const getLikedContent = async (req, res) => {
     res.json(allLiked);
   } catch (error) {
     console.error("getLikedContent Hatası:", error);
-    res.status(500).json({ message: "Beğeniler getirilemedi" });
+    res.status(500).json({ message: "Beğenilen içerikler getirilemedi" });
   }
 };
 
@@ -454,12 +445,39 @@ const repostContent = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Frontend'den FormData veya JSON olarak gelen verileri alıyoruz
     const text = req.body?.text || "";
+    // Type bilgisi gelmezse varsayılan 'post' kabul edilir
     const type = req.body?.type || "post";
     const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
-
     const userId = req.user._id || req.user.id;
 
+    // --- 1. TOGGLE MANTIĞI (Geri Alma) ---
+    // Sadece düz repostlar (metin ve resim içermeyen) toggle edilebilir
+    if (!text.trim() && !imagePath) {
+      const query = {
+        user: userId,
+        isRepost: true,
+        text: "",
+        image: "",
+        // Dinamik alan belirleme: parentPost veya parentComment
+        [type === "post" ? "parentPost" : "parentComment"]: id,
+      };
+
+      const existingRepost = await Post.findOne(query);
+
+      if (existingRepost) {
+        // findByIdAndDelete tetiklendiğinde Post.js modelindeki middleware sayacı düşürür.
+        await Post.findByIdAndDelete(existingRepost._id);
+
+        return res.status(200).json({
+          action: "unrepost",
+          message: "Repost başarıyla geri alındı.",
+        });
+      }
+    }
+
+    // --- 2. YENİ REPOST / ALINTILA OLUŞTURMA ---
     const newRepost = new Post({
       user: userId,
       text: text,
@@ -469,15 +487,19 @@ const repostContent = async (req, res) => {
 
     if (type === "post") {
       const originalPost = await Post.findById(id);
-      if (!originalPost)
-        return res.status(404).json({ message: "Post bulunamadı" });
+      if (!originalPost) {
+        return res.status(404).json({ message: "Orijinal post bulunamadı" });
+      }
 
       newRepost.parentPost = id;
+      // Sayaç artırma (Modelde pre-save hook yoksa manuel devam)
       await Post.findByIdAndUpdate(id, { $inc: { repostsCount: 1 } });
-    } else if (type === "comment") {
+    } else {
+      // type === "comment" durumu
       const originalComment = await Comment.findById(id);
-      if (!originalComment)
-        return res.status(404).json({ message: "Yorum bulunamadı" });
+      if (!originalComment) {
+        return res.status(404).json({ message: "Orijinal yorum bulunamadı" });
+      }
 
       newRepost.parentComment = id;
       await Comment.findByIdAndUpdate(id, { $inc: { repostsCount: 1 } });
@@ -485,7 +507,8 @@ const repostContent = async (req, res) => {
 
     await newRepost.save();
 
-    const populated = await newRepost.populate([
+    // Veriyi populate ederek frontend'in beklediği formatta hazırlıyoruz
+    const populated = await Post.findById(newRepost._id).populate([
       { path: "user", select: "username profileImage" },
       {
         path: "parentPost",
@@ -497,9 +520,12 @@ const repostContent = async (req, res) => {
       },
     ]);
 
-    res.status(201).json(populated);
+    res.status(201).json({
+      ...(populated._doc || populated.toObject()),
+      action: "repost",
+    });
   } catch (error) {
-    console.error("REPOST HATASI:", error);
+    console.error("Repost Hatası Detay:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -510,7 +536,6 @@ module.exports = {
   getExplore,
   likePost,
   deletePost,
-  /*getLikedPosts,*/
   getPostById,
   getLikedContent,
   repostContent,

@@ -58,10 +58,10 @@ export default function PostPage({ type = "post" }) {
             }
           : null,
 
-        isOwner:
-          currentUserId &&
-          (rawData.user?._id?.toString() === currentUserId.toString() ||
-            rawData.userId?.toString() === currentUserId.toString()),
+        isOwner: currentUser
+          ? rawData.user?._id?.toString() === currentUserId?.toString() ||
+            rawData.userId?.toString() === currentUserId?.toString()
+          : false,
       };
 
       setContent(formattedData);
@@ -74,7 +74,7 @@ export default function PostPage({ type = "post" }) {
     } finally {
       setLoading(false);
     }
-  }, [contentId, navigate, type, currentUserId]);
+  }, [contentId, navigate, type, currentUserId, currentUser]);
 
   useEffect(() => {
     fetchDetails();

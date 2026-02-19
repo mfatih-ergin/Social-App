@@ -29,7 +29,6 @@ export default function QuoteModal({ post, isOpen, onClose, onSubmit }) {
   };
 
   const handleSubmit = () => {
-    // Alıntı metni veya resim varsa gönderilebilir
     onSubmit({ text, image });
     setText("");
     removeImage();
@@ -63,7 +62,7 @@ export default function QuoteModal({ post, isOpen, onClose, onSubmit }) {
             <div className="w-100">
               <textarea
                 className={`form-control border-0 shadow-none bg-transparent fs-5 p-0 mb-2 ${isDark ? "text-white" : ""}`}
-                placeholder="Neler oluyor?"
+                placeholder="Alıntılayın..."
                 rows="3"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -71,26 +70,26 @@ export default function QuoteModal({ post, isOpen, onClose, onSubmit }) {
                 style={{ resize: "none" }}
               ></textarea>
 
-              {/* Orijinal Postun Önizlemesi */}
-              <div className="quote-original-preview mt-2 border rounded-3 overflow-hidden">
-                <RepostCard post={post} />
-              </div>
-
-              {/* Seçilen Resim Önizlemesi */}
               {imagePreview && (
-                <div className="mt-3">
+                <div className="mb-3">
                   <FormImagePreview
                     preview={imagePreview}
                     onRemove={removeImage}
                   />
                 </div>
               )}
+
+              <div className="quote-original-preview border rounded-3 overflow-hidden">
+                <RepostCard post={post} />
+              </div>
             </div>
           </div>
         </div>
 
         <div className="p-3 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
-          <ImageUploadButton onImageSelect={handleImageSelect} />
+          <div className="d-flex align-items-center">
+            <ImageUploadButton onImageSelect={handleImageSelect} />
+          </div>
           <button
             className="btn btn-primary rounded-pill fw-bold px-4"
             disabled={!text.trim() && !image}

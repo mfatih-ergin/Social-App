@@ -33,14 +33,14 @@ export default function RepostButton({
       >
         <li>
           <button
-            className="dropdown-item d-flex align-items-center gap-2 py-2"
+            className={`dropdown-item d-flex align-items-center gap-2 py-2 ${isReposted ? "text-danger" : ""}`}
             onClick={(e) => {
               e.stopPropagation();
               onRepost();
             }}
           >
             <i className="bi bi-repeat"></i>
-            <span>Repost</span>
+            <span>{isReposted ? "Gönderimi geri al" : "Repost"}</span>
           </button>
         </li>
         <li>

@@ -22,6 +22,7 @@ export default function ProfilePage() {
   const [activeCollection, setActiveCollection] = useState("Tümü");
 
   const isDark = theme === "dark";
+  const isOwnProfile = currentUser?._id === id || currentUser?.id === id;
 
   const fetchProfile = async () => {
     if (!id || id === "undefined") return;
@@ -42,6 +43,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (id && id !== "undefined") {
       fetchProfile();
+      setActiveTab("posts");
     }
   }, [id]);
 
@@ -55,7 +57,6 @@ export default function ProfilePage() {
       isFollowingNow
         ? await unfollowUser(profile._id)
         : await followUser(profile._id);
-
       const res = await getUserProfile(id);
       setProfile(res.data);
     } catch (err) {
@@ -101,7 +102,7 @@ export default function ProfilePage() {
           >
             <ProfileHeader
               profile={profile}
-              isOwnProfile={currentUser?._id === profile?._id}
+              isOwnProfile={isOwnProfile}
               isFollowing={profile?.followers.some(
                 (f) => (f._id || f) === currentUser?._id,
               )}
@@ -109,9 +110,13 @@ export default function ProfilePage() {
               btnLoading={btnLoading}
             />
 
-            <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+            <ProfileTabs
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              isOwnProfile={isOwnProfile}
+            />
 
-            <div className="px-4 py-3">
+            <div className="px-0 py-0">
               <ProfileContent
                 activeTab={activeTab}
                 id={id}
@@ -121,8 +126,10 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="col-lg-4 d-none d-lg-block">
-            <RightAside />
+          <div className="col-lg-4 d-none d-lg-block border-start-0">
+            <div className="sticky-top pt-2">
+              <RightAside />
+            </div>
           </div>
         </div>
       </div>

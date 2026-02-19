@@ -1,43 +1,29 @@
 /* SaveButton.css */
 
 .save-btn {
-  /* Buton Sıfırlama */
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex !important;
-  align-items: center !important;
-  
-  /* AÇIK TEMA NÖTR DURUM (Gri) */
-  color: #6c757d !important; 
-  text-decoration: none !important;
 }
 
-/* Sadece Hover: İster açık ister koyu tema olsun maviye döner */
 .save-btn:hover {
   transform: scale(1.1);
   color: #1d9bf0 !important;
 }
 
-/* --- KOYU TEMA NÖTR DURUM --- */
-/* Kaydedilmemişse beyaz/açık gri görünür */
+
 .save-btn.dark-theme {
-  color: #e7e9ea !important;
+  color: #e7e9ea;
 }
 
-/* Koyu temada hover olunca yine maviye dönsün */
-.save-btn.dark-theme:hover {
-  color: #1d9bf0 !important;
-}
-
-/* --- KAYDEDİLMİŞ DURUM (Fiks Mavi) --- */
 .save-btn.saved {
   color: #1d9bf0 !important;
 }
 
-/* Kaydedilmişken hover olunca biraz daha parlasın */
 .save-btn.saved:hover {
   filter: brightness(1.2);
+}
+
+.save-btn.disabled {
+  pointer-events: none;
+  opacity: 0.6;
 }
