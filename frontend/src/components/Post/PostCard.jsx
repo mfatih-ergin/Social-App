@@ -27,9 +27,38 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
 
   if (!post) return null;
 
+  const isDirectRepost = post.isRepost && !post.text;
+
+  const displayData = isDirectRepost
+    ? post.parentPost || post.parentComment
+    : post;
+
+  if (!displayData) {
+    return (
+      <div
+        className={`post-card mx-auto w-100 p-3 text-secondary italic ${theme === "dark" ? "dark" : ""}`}
+      >
+        Orijinal içerik silinmiş.
+      </div>
+    );
+  }
+
   const handleCardClick = () => {
     if (isDetailView || isDeleting) return;
-    navigate(`/post/${post._id}`);
+
+    // Eğer bu bir direkt repost ise
+    if (isDirectRepost) {
+      if (post.parentPost) {
+        // Orijinal bir post ise post detayına git
+        navigate(`/post/${post.parentPost._id || post.parentPost}`);
+      } else if (post.parentComment) {
+        // Orijinal bir yorum ise yorum detayına git
+        navigate(`/comment/${post.parentComment._id || post.parentComment}`);
+      }
+    } else {
+      // Normal post ise kendi detayına git
+      navigate(`/post/${post._id}`);
+    }
   };
 
   const handleDelete = async (e) => {
@@ -48,20 +77,14 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
 
   const handleCommentClick = (e) => {
     if (e) e.stopPropagation();
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    if (!user) return navigate("/login");
     setIsCommentModalOpen(true);
   };
 
   const handleDirectRepost = async () => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    if (!user) return navigate("/login");
     try {
-      await repostContent(post._id);
+      await repostContent(displayData._id);
       onUpdate?.();
     } catch (error) {
       console.error("Repost hatası:", error);
@@ -69,10 +92,7 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
   };
 
   const handleQuoteClick = () => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    if (!user) return navigate("/login");
     setIsQuoteModalOpen(true);
   };
 
@@ -83,7 +103,7 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
     if (image) formData.append("image", image);
 
     try {
-      await addComment(post._id, formData);
+      await addComment(displayData._id, formData);
       setIsCommentModalOpen(false);
       onUpdate?.();
     } catch (error) {
@@ -94,16 +114,12 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
   const handleQuoteSubmit = async (quoteData) => {
     const { text, image } = quoteData;
     const formData = new FormData();
-
     formData.append("text", text || "");
     formData.append("type", "post");
-
-    if (image) {
-      formData.append("image", image);
-    }
+    if (image) formData.append("image", image);
 
     try {
-      await repostContent(post._id, formData);
+      await repostContent(displayData._id, formData);
       setIsQuoteModalOpen(false);
       onUpdate?.();
     } catch (error) {
@@ -121,45 +137,49 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
         style={{ cursor: !isDetailView ? "pointer" : "default" }}
       >
         <div className="card-body">
-          {post.isRepost && !post.text && (
+          {isDirectRepost && (
             <div className="repost-indicator mb-1 small text-secondary fw-bold d-flex align-items-center">
               <i className="bi bi-repeat me-2"></i>
               <span>
                 {post.user?._id === user?._id ? "Sen" : post.user?.username}{" "}
-                Repost
+                Repostladı
               </span>
             </div>
           )}
 
           <div className="d-flex justify-content-between align-items-center mb-2">
             <UserInfo
-              userId={post.userId || post.user?._id}
-              username={post.username || post.user?.username}
-              profileImage={post.profileImage || post.user?.profileImage}
-              createdAt={post.createdAt}
+              userId={displayData.user?._id || displayData.userId}
+              username={displayData.user?.username || displayData.username}
+              profileImage={
+                displayData.user?.profileImage || displayData.profileImage
+              }
+              createdAt={displayData.createdAt}
               formatTime={formatRelativeTime}
             />
             <div onClick={(e) => e.stopPropagation()}>
-              <MeatballsMenu isOwner={post.isOwner} onDelete={handleDelete} />
+              <MeatballsMenu
+                isOwner={post.user?._id === user?._id || post.isOwner}
+                onDelete={handleDelete}
+              />
             </div>
           </div>
 
           <div className="post-container">
-            {(post.text || post.image) && (
-              <PostContent text={post.text} image={post.image} />
+            {(displayData.text || displayData.image) && (
+              <PostContent
+                text={isDirectRepost ? displayData.text : post.text}
+                image={isDirectRepost ? displayData.image : post.image}
+              />
             )}
 
-            {post.isRepost && (
+            {post.isRepost && post.text && (
               <div className="mt-2 quote-wrapper">
                 {post.parentPost ? (
                   <RepostCard post={post.parentPost} isComment={false} />
                 ) : post.parentComment ? (
                   <RepostCard post={post.parentComment} isComment={true} />
-                ) : (
-                  <div className="p-3 border rounded text-secondary small italic">
-                    Orijinal içerik silinmiş.
-                  </div>
-                )}
+                ) : null}
               </div>
             )}
           </div>
@@ -172,11 +192,11 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
 
           <div onClick={(e) => e.stopPropagation()}>
             <PostActions
-              postId={post._id}
-              likedByCurrentUser={post.likedByCurrentUser}
-              likesCount={post.likesCount}
-              commentsCount={post.commentsCount}
-              repostsCount={post.repostsCount}
+              postId={displayData._id}
+              likedByCurrentUser={displayData.likedByCurrentUser}
+              likesCount={displayData.likesCount}
+              commentsCount={displayData.commentsCount}
+              repostsCount={displayData.repostsCount}
               onCommentClick={handleCommentClick}
               onRepostClick={handleDirectRepost}
               onQuoteClick={handleQuoteClick}
@@ -186,14 +206,14 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
       </div>
 
       <CommentModal
-        post={post}
+        post={displayData}
         isOpen={isCommentModalOpen}
         onClose={() => setIsCommentModalOpen(false)}
         onSubmit={handleCommentSubmit}
       />
 
       <QuoteModal
-        post={post}
+        post={displayData}
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
         onSubmit={handleQuoteSubmit}

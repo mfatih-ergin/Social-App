@@ -55,22 +55,40 @@ const getPosts = async (req, res) => {
       const likedByCurrentUser = userId
         ? post.likes.some((id) => id.toString() === userId)
         : false;
-
       const isOwner = userId ? post.user._id.toString() === userId : false;
+
+      let formattedParent = null;
+      const parentSource = post.parentPost || post.parentComment;
+
+      if (parentSource) {
+        formattedParent = {
+          ...(parentSource._doc || parentSource),
+          likesCount: parentSource.likes ? parentSource.likes.length : 0,
+          likedByCurrentUser:
+            userId && parentSource.likes
+              ? parentSource.likes.some((id) => id.toString() === userId)
+              : false,
+          image: parentSource.image
+            ? parentSource.image.startsWith("http")
+              ? parentSource.image
+              : `http://localhost:5000${parentSource.image}`
+            : null,
+        };
+      }
 
       return {
         _id: post._id,
-        userId: post.user._id,
-        username: post.user.username,
-        profileImage: post.user.profileImage,
+        userId: post.user?._id,
+        username: post.user?.username,
+        profileImage: post.user?.profileImage,
         text: post.text,
         image: post.image ? `http://localhost:5000${post.image}` : null,
         likesCount: post.likes.length,
         commentsCount: post.commentsCount || 0,
         repostsCount: post.repostsCount || 0,
         isRepost: post.isRepost || false,
-        parentPost: post.parentPost || null,
-        parentComment: post.parentComment || null,
+        parentPost: post.parentPost ? formattedParent : null,
+        parentComment: post.parentComment ? formattedParent : null,
 
         likedByCurrentUser,
         isOwner: isOwner,
@@ -80,7 +98,7 @@ const getPosts = async (req, res) => {
 
     res.json(postsWithLikeInfo);
   } catch (error) {
-    console.error(error);
+    console.error("getPosts Hatası:", error);
     res.status(500).json({ message: "Postlar alınamadı" });
   }
 };
@@ -136,33 +154,41 @@ const getExplore = async (req, res) => {
 
 const likePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
-
-    if (!post) {
-      return res.status(404).json({ message: "Post bulunamadı" });
-    }
-
+    const { id } = req.params;
     const userId = req.user._id.toString();
 
-    const alreadyLiked = post.likes.some(
+    let target = await Post.findById(id);
+    let isComment = false;
+
+    if (!target) {
+      target = await Comment.findById(id);
+      isComment = true;
+    }
+
+    if (!target) {
+      return res.status(404).json({ message: "İçerik bulunamadı" });
+    }
+
+    const alreadyLiked = target.likes.some(
       (likedUserId) => likedUserId.toString() === userId,
     );
 
     if (alreadyLiked) {
-      post.likes = post.likes.filter((id) => id.toString() !== userId);
+      target.likes = target.likes.filter((id) => id.toString() !== userId);
     } else {
-      post.likes.push(userId);
+      target.likes.push(userId);
     }
 
-    await post.save();
+    await target.save();
 
     res.json({
-      likesCount: post.likes.length,
+      likesCount: target.likes.length,
       liked: !alreadyLiked,
+      isComment,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Like işlemi başarısız" });
+    console.error("LIKE HATASI:", error);
+    res.status(500).json({ message: "Beğeni işlemi başarısız" });
   }
 };
 
@@ -193,15 +219,33 @@ const deletePost = async (req, res) => {
     }
 
     if (post.image) {
-      const relativePath = post.image.startsWith("/")
-        ? post.image.substring(1)
-        : post.image;
-      const imagePath = path.join(process.cwd(), relativePath);
+      const isUsedElsewhereInPosts = await Post.findOne({
+        image: post.image,
+        _id: { $ne: post._id },
+      });
+      const isUsedInComments = await Comment.findOne({ image: post.image });
 
-      if (fs.existsSync(imagePath)) {
-        fs.unlink(imagePath, (err) => {
-          if (err) console.error("Resim dosyası silinirken hata:", err);
-        });
+      if (!isUsedElsewhereInPosts && !isUsedInComments) {
+        const relativePath = post.image.startsWith("/")
+          ? post.image.slice(1)
+          : post.image;
+        const fullPath = path.join(process.cwd(), relativePath);
+
+        if (fs.existsSync(fullPath)) {
+          try {
+            fs.unlinkSync(fullPath);
+            console.log(
+              "Dosya başka yerde kullanılmadığı için sistemden silindi:",
+              fullPath,
+            );
+          } catch (err) {
+            console.error("Dosya silme hatası:", err);
+          }
+        }
+      } else {
+        console.log(
+          "Dosya orijinal postta veya başka bir yerde kullanılıyor, fiziksel silme atlandı.",
+        );
       }
     }
 
@@ -209,9 +253,7 @@ const deletePost = async (req, res) => {
 
     await post.deleteOne();
 
-    res
-      .status(200)
-      .json({ message: "Post, bağlı yorumlar ve sayaçlar güncellendi." });
+    res.status(200).json({ message: "Post başarıyla silindi." });
   } catch (error) {
     console.error("Silme işlemi sırasında hata:", error);
     res.status(500).json({ message: "Sunucu hatası: Post silinemedi." });
@@ -270,7 +312,7 @@ const getPostById = async (req, res) => {
       });
 
     if (!post) {
-      console.log(`Hata: ${id} ID'li post veritabanında mevcut değil.`);
+      console.log(`Hata: ${id} ID'li içerik Post koleksiyonunda yok.`);
       return res.status(404).json({ message: "Gönderi bulunamadı" });
     }
 
@@ -301,12 +343,29 @@ const getPostById = async (req, res) => {
           : false,
     };
 
+    if (
+      formattedPost.parentPost &&
+      formattedPost.parentPost.image &&
+      !formattedPost.parentPost.image.startsWith("http")
+    ) {
+      formattedPost.parentPost.image = `http://localhost:5000${formattedPost.parentPost.image}`;
+    }
+    if (
+      formattedPost.parentComment &&
+      formattedPost.parentComment.image &&
+      !formattedPost.parentComment.image.startsWith("http")
+    ) {
+      formattedPost.parentComment.image = `http://localhost:5000${formattedPost.parentComment.image}`;
+    }
+
     return res.status(200).json(formattedPost);
   } catch (error) {
     console.error("Post getirme hatası (Server):", error);
+
     if (error.name === "CastError") {
       return res.status(404).json({ message: "Geçersiz gönderi kimliği" });
     }
+
     return res.status(500).json({ message: "Sunucu hatası" });
   }
 };
