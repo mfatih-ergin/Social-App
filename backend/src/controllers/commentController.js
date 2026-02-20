@@ -1,97 +1,86 @@
 const Comment = require("../models/Comment");
 const Post = require("../models/Post");
+const Like = require("../models/Like");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 
 const addComment = async (req, res) => {
   try {
-    const { text, parentComment, postId: bodyPostId } = req.body;
-    const postId = req.params.postId || bodyPostId;
-    const userId = req.user._id || req.user.id;
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    const { postId } = req.params;
+    const { text } = req.body;
+    const userId = req.user._id;
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
 
-    if (!text && !imagePath) {
-      return res.status(400).json({ message: "Yorum içeriği boş olamaz." });
-    }
-
-    const comment = await Comment.create({
+    const newComment = new Comment({
       post: postId,
       user: userId,
-      text: text || "",
+      text,
       image: imagePath,
-      parentComment: parentComment || null,
+      likesCount: 0,
     });
 
-    if (!parentComment) {
-      await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
-    } else {
-      await Comment.findByIdAndUpdate(parentComment, {
-        $inc: { repliesCount: 1 },
-      });
-    }
+    await newComment.save();
 
-    const populatedComment = await comment.populate(
-      "user",
-      "username profileImage",
-    );
-    res.status(201).json(populatedComment);
+    await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
+
+    res.status(201).json(newComment);
   } catch (error) {
-    console.error("Yorum Hatası:", error);
     res.status(500).json({ message: "Yorum eklenemedi" });
   }
 };
 
 const getComments = async (req, res) => {
   try {
-    const userId = req.user ? (req.user._id || req.user.id).toString() : null;
+    const { postId } = req.params;
+    const userId = req.user ? req.user._id.toString() : null;
 
-    const comments = await Comment.find({
-      post: req.params.postId,
-      parentComment: null,
-    })
+    const comments = await Comment.find({ post: postId, parentComment: null })
       .populate("user", "username profileImage")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const formattedComments = await Promise.all(
-      comments.map(async (comment) => {
-        const commentObj = comment._doc || comment;
-        const cIdStr = commentObj._id.toString();
+    let likedCommentIds = new Set();
+    let repostedCommentIds = new Set();
 
-        let isRepostedByMe = false;
-        if (userId) {
-          // TİP UYUŞMAZLIĞINI ÖNLEMEK İÇİN:
-          // userId'yi ObjectId'ye çevirerek sorguluyoruz
-          const repostExists = await Post.findOne({
-            user: new mongoose.Types.ObjectId(userId),
-            isRepost: true,
-            parentComment: new mongoose.Types.ObjectId(cIdStr),
-            $or: [{ text: "" }, { text: null }, { text: { $exists: false } }],
-          });
-          isRepostedByMe = !!repostExists;
-        }
+    if (userId) {
+      const [likes, reposts] = await Promise.all([
+        Like.find({ user: userId, comment: { $exists: true, $ne: null } }),
+        Post.find({
+          user: userId,
+          isRepost: true,
+          parentComment: { $exists: true, $ne: null },
+          $or: [{ text: "" }, { text: null }, { text: { $exists: false } }],
+        }),
+      ]);
 
-        return {
-          ...commentObj,
-          isOwner: userId ? commentObj.user?._id?.toString() === userId : false,
-          likedByCurrentUser: userId
-            ? commentObj.likes.some((id) => id.toString() === userId)
-            : false,
-          isRepostedByMe: isRepostedByMe,
-          likesCount: commentObj.likes.length,
-          image: commentObj.image
-            ? `http://localhost:5000${commentObj.image}`
-            : null,
-          username: commentObj.user?.username,
-          userId: commentObj.user?._id,
-        };
-      }),
-    );
+      likes.forEach((l) => likedCommentIds.add(l.comment.toString()));
+      reposts.forEach((r) =>
+        repostedCommentIds.add(r.parentComment.toString()),
+      );
+    }
+
+    const formattedComments = comments.map((comment) => {
+      const cIdStr = comment._id.toString();
+      return {
+        ...comment,
+        isComment: true,
+        userId: comment.user?._id,
+        username: comment.user?.username,
+        profileImage: comment.user?.profileImage,
+
+        likedByCurrentUser: likedCommentIds.has(cIdStr),
+        isRepostedByMe: repostedCommentIds.has(cIdStr),
+
+        isOwner: userId ? comment.user?._id?.toString() === userId : false,
+        image: comment.image ? `http://localhost:5000${comment.image}` : null,
+      };
+    });
 
     res.json(formattedComments);
   } catch (error) {
     console.error("Yorum getirme hatası:", error);
-    res.status(500).json({ message: "Yorumlar alınamadı" });
+    res.status(500).json({ message: "Yorumlar yüklenemedi" });
   }
 };
 
@@ -106,12 +95,11 @@ const getCommentById = async (req, res) => {
 
     if (!comment) return res.status(404).json({ message: "Yorum bulunamadı" });
 
-    const commentObj = comment._doc || comment;
+    const commentObj = comment.toObject();
     const cIdStr = commentObj._id.toString();
 
     let isRepostedByMe = false;
     if (userId) {
-      // BURASI POSTPAGE İÇİN KRİTİK:
       const repostExists = await Post.findOne({
         user: new mongoose.Types.ObjectId(userId),
         isRepost: true,
@@ -121,20 +109,33 @@ const getCommentById = async (req, res) => {
       isRepostedByMe = !!repostExists;
     }
 
+    let likedByCurrentUser = false;
+    if (userId) {
+      const likeExists = await Like.findOne({
+        user: userId,
+        comment: cIdStr,
+      });
+      likedByCurrentUser = !!likeExists;
+    }
+
     res.json({
       ...commentObj,
-      isOwner: userId ? commentObj.user?._id?.toString() === userId : false,
-      likedByCurrentUser: userId
-        ? commentObj.likes.some((id) => id.toString() === userId)
-        : false,
-      isRepostedByMe: isRepostedByMe, // Backend'den gelen bu bilgi artık 'true' olacak
-      likesCount: commentObj.likes.length,
-      image: commentObj.image
-        ? `http://localhost:5000${commentObj.image}`
-        : null,
+
+      isComment: true,
+      userId: commentObj.user?._id,
       username: commentObj.user?.username,
       profileImage: commentObj.user?.profileImage,
-      userId: commentObj.user?._id,
+
+      likedByCurrentUser: likedByCurrentUser,
+      likesCount: commentObj.likesCount || 0,
+      isRepostedByMe: isRepostedByMe,
+      isOwner: userId ? commentObj.user?._id?.toString() === userId : false,
+
+      image: commentObj.image
+        ? commentObj.image.startsWith("http")
+          ? commentObj.image
+          : `http://localhost:5000${commentObj.image}`
+        : null,
     });
   } catch (error) {
     console.error("Yorum detay hatası:", error);
@@ -191,67 +192,49 @@ const getReplies = async (req, res) => {
   }
 };
 
-const likeComment = async (req, res) => {
-  try {
-    const comment = await Comment.findById(req.params.id);
-    if (!comment) return res.status(404).json({ message: "Yorum bulunamadı" });
-
-    const userId = (req.user._id || req.user.id).toString();
-    const alreadyLiked = comment.likes.some((id) => id.toString() === userId);
-
-    if (alreadyLiked) {
-      comment.likes = comment.likes.filter((id) => id.toString() !== userId);
-    } else {
-      comment.likes.push(userId);
-    }
-    await comment.save();
-    res.json({ likesCount: comment.likes.length, liked: !alreadyLiked });
-  } catch (error) {
-    res.status(500).json({ message: "Yorum beğenilemedi" });
-  }
-};
-
 const deleteComment = async (req, res) => {
   try {
-    const commentId = req.params.id;
-    const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ message: "Yorum bulunamadı" });
+    const { id } = req.params;
+    const userId = req.user._id || req.user.id;
 
-    const currentUserId = (req.user._id || req.user.id).toString();
-    if (comment.user.toString() !== currentUserId) {
-      return res.status(403).json({ message: "Yetkisiz işlem" });
+    const comment = await Comment.findById(id);
+
+    if (!comment) {
+      return res.status(404).json({ message: "Yorum bulunamadı." });
     }
 
-    if (!comment.parentComment) {
-      await Post.findByIdAndUpdate(comment.post, {
-        $inc: { commentsCount: -1 },
-      });
-      await Comment.deleteMany({ parentComment: commentId });
-    } else {
-      await Comment.findByIdAndUpdate(comment.parentComment, {
-        $inc: { repliesCount: -1 },
-      });
+    if (comment.user.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Bu yorumu silme yetkiniz yok." });
     }
+
+    const postId = comment.post;
 
     if (comment.image) {
-      const fullPath = path.join(
-        process.cwd(),
-        comment.image.startsWith("/") ? comment.image.slice(1) : comment.image,
-      );
+      const relativePath = comment.image.startsWith("/")
+        ? comment.image.slice(1)
+        : comment.image;
+      const fullPath = path.join(process.cwd(), relativePath);
       if (fs.existsSync(fullPath)) {
         try {
           fs.unlinkSync(fullPath);
         } catch (err) {
-          console.error(err);
+          console.error("Yorum resmi silinirken hata:", err);
         }
       }
     }
 
-    await comment.deleteOne();
-    res.status(200).json({ message: "Silindi" });
+    await Comment.findByIdAndDelete(id);
+
+    await Like.deleteMany({ comment: id });
+
+    if (postId) {
+      await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: -1 } });
+    }
+
+    res.status(200).json({ message: "Yorum başarıyla silindi." });
   } catch (error) {
-    console.error("Yorum silme hatası:", error);
-    res.status(500).json({ message: "Hata oluştu" });
+    console.error("YORUM SİLME HATASI:", error);
+    res.status(500).json({ message: "Yorum silinirken sunucu hatası oluştu." });
   }
 };
 
@@ -259,7 +242,6 @@ module.exports = {
   addComment,
   getComments,
   deleteComment,
-  likeComment,
   getCommentById,
   getReplies,
 };

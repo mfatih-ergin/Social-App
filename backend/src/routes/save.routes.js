@@ -4,10 +4,10 @@ const {
   toggleSave,
   getSavedContent,
 } = require("../controllers/saveController");
-const authMiddleware = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
-router.post("/toggle/:id", authMiddleware, toggleSave);
+router.post("/toggle/:id", protect, toggleSave);
 
-router.get("/", authMiddleware, getSavedContent);
+router.get("/", protect, getSavedContent);
 
 module.exports = router;

@@ -8,13 +8,13 @@ const {
   updateSettings,
   deleteUser,
 } = require("../controllers/userController");
-const authMiddleware = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
-router.get("/:id", authMiddleware, getUserProfile);
-router.get("/:userId/userposts", authMiddleware, getUserPosts);
-router.put("/:id/follow", authMiddleware, followUser);
-router.put("/:id/unfollow", authMiddleware, unfollowUser);
-router.put("/settings", authMiddleware, updateSettings);
-router.delete("/:id/delete", authMiddleware, deleteUser);
+router.get("/:id", protect, getUserProfile);
+router.get("/:userId/userposts", protect, getUserPosts);
+router.put("/:id/follow", protect, followUser);
+router.put("/:id/unfollow", protect, unfollowUser);
+router.put("/settings", protect, updateSettings);
+router.delete("/:id/delete", protect, deleteUser);
 
 module.exports = router;

@@ -38,6 +38,9 @@ export default function PostPage({ type = "post" }) {
 
       const formattedData = {
         ...rawData,
+        likesCount: rawData.likesCount !== undefined ? rawData.likesCount : 0,
+        likedByCurrentUser: !!rawData.likedByCurrentUser,
+
         userId: rawData.user?._id || rawData.userId,
         username: rawData.user?.username || rawData.username,
         profileImage: rawData.user?.profileImage || rawData.profileImage,
@@ -50,6 +53,7 @@ export default function PostPage({ type = "post" }) {
         parentPost: rawData.parentPost
           ? {
               ...rawData.parentPost,
+              likesCount: rawData.parentPost.likesCount || 0,
               image:
                 rawData.parentPost.image &&
                 !rawData.parentPost.image.startsWith("http")

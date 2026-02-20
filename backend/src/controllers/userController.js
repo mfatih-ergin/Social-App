@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Post = require("../models/Post");
 const Save = require("../models/Save");
+const Like = require("../models/Like"); // MUTLAKA EKLE!
 
 const getUserProfile = async (req, res) => {
   try {
@@ -22,19 +23,43 @@ const getUserProfile = async (req, res) => {
 const getUserPosts = async (req, res) => {
   try {
     const { userId } = req.params;
-    const currentUserId = req.user ? req.user._id.toString() : null;
+    const currentUserId = req.user
+      ? (req.user._id || req.user.id).toString()
+      : null;
 
-    // 1. Kaydedilenleri kontrol etmek için Set oluşturuyoruz
     let savedPostIds = new Set();
-    let savedCommentIds = new Set();
+    let myLikedIds = new Set();
+    let repostedPostIds = new Set();
+    let repostedCommentIds = new Set();
 
     if (currentUserId) {
-      const userSaves = await Save.find({ user: currentUserId });
-      savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
-      savedCommentIds = new Set(userSaves.map((s) => s.comment?.toString()));
+      const [userSaves, userLikes, myReposts] = await Promise.all([
+        Save.find({ user: currentUserId }),
+        Like.find({ user: currentUserId }),
+        Post.find({
+          user: currentUserId,
+          isRepost: true,
+          $or: [{ text: "" }, { text: null }, { text: { $exists: false } }],
+        }).select("parentPost parentComment"),
+      ]);
+
+      userSaves.forEach((s) => {
+        if (s.post) savedPostIds.add(s.post.toString());
+        if (s.comment) savedPostIds.add(s.comment.toString());
+      });
+
+      userLikes.forEach((l) => {
+        if (l.post) myLikedIds.add(l.post.toString());
+        if (l.comment) myLikedIds.add(l.comment.toString());
+      });
+
+      myReposts.forEach((rp) => {
+        if (rp.parentPost) repostedPostIds.add(rp.parentPost.toString());
+        if (rp.parentComment)
+          repostedCommentIds.add(rp.parentComment.toString());
+      });
     }
 
-    // 2. Postları çekiyoruz
     const posts = await Post.find({ user: userId })
       .populate("user", "username profileImage")
       .populate({
@@ -45,68 +70,79 @@ const getUserPosts = async (req, res) => {
         path: "parentComment",
         populate: { path: "user", select: "username profileImage" },
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    // 3. Verileri tek tek formatlıyoruz
     const formattedPosts = posts.map((post) => {
-      const postObj = post._doc || post;
+      const pIdStr = post._id.toString();
 
-      // PARENT (Alıntı/Repost) İçeriği Formatlama
+      // Alıntı mı yoksa düz repost mu?
+      const isQuote = post.isRepost && post.text && post.text.trim().length > 0;
+      const parent = post.parentPost || post.parentComment;
+      const originalContentId = parent ? parent._id.toString() : pIdStr;
+
+      // 1. Parent (İçerideki kutu) Formatlama
       let formattedParent = null;
-      const parentSource = postObj.parentPost || postObj.parentComment;
-
-      if (parentSource) {
-        const pData = parentSource._doc || parentSource;
-        const pId = pData._id.toString();
-
+      if (parent) {
+        const parentId = parent._id.toString();
         formattedParent = {
-          ...pData,
-          // Alıntılanan içeriğin beğeni sayısı (Senin eksik olan kısmın burasıydı)
-          likesCount: pData.likes ? pData.likes.length : 0,
-          likedByCurrentUser:
-            currentUserId && pData.likes
-              ? pData.likes.some((id) => id.toString() === currentUserId)
-              : false,
-          // Alıntılanan içerik kaydedilmiş mi?
-          isSavedByMe: postObj.parentPost
-            ? savedPostIds.has(pId)
-            : savedCommentIds.has(pId),
-          // Resim URL düzeltmesi
-          image: pData.image
-            ? pData.image.startsWith("http")
-              ? pData.image
-              : `http://localhost:5000${pData.image}`
+          ...parent,
+          likesCount: parent.likesCount || 0,
+          likedByCurrentUser: myLikedIds.has(parentId),
+          isSavedByMe: savedPostIds.has(parentId),
+          isRepostedByMe: post.parentComment
+            ? repostedCommentIds.has(parentId)
+            : repostedPostIds.has(parentId),
+          image: parent.image
+            ? parent.image.startsWith("http")
+              ? parent.image
+              : `http://localhost:5000${parent.image}`
             : null,
         };
       }
 
-      // Ana Postu Döndür
-      return {
-        ...postObj,
-        userId: postObj.user?._id,
-        username: postObj.user?.username,
-        profileImage: postObj.user?.profileImage,
-        likesCount: postObj.likes ? postObj.likes.length : 0,
-        likedByCurrentUser:
-          currentUserId && postObj.likes
-            ? postObj.likes.some((id) => id.toString() === currentUserId)
-            : false,
-        isSavedByMe: savedPostIds.has(postObj._id.toString()),
-        isOwner: currentUserId
-          ? postObj.user?._id?.toString() === currentUserId
-          : false,
-        image: postObj.image ? `http://localhost:5000${postObj.image}` : null,
+      // 2. Ana Postun Beğeni Durumu Kararı
+      // Eğer alıntıysa (Quote), sadece kendi beğenisine bak.
+      // Eğer düz repostsa, orijinalin beğenisine de bakabilir.
+      const isLiked = isQuote
+        ? myLikedIds.has(pIdStr)
+        : myLikedIds.has(pIdStr) || myLikedIds.has(originalContentId);
 
-        // Formatlanmış parent yapılarını yerleştir
-        parentPost: postObj.parentPost ? formattedParent : null,
-        parentComment: postObj.parentComment ? formattedParent : null,
+      return {
+        ...post,
+        userId: post.user?._id,
+        username: post.user?.username,
+        profileImage: post.user?.profileImage,
+
+        // BEĞENİ VE KAYDETME
+        likesCount: post.likesCount || 0,
+        likedByCurrentUser: isLiked,
+        isSavedByMe: isQuote
+          ? savedPostIds.has(pIdStr)
+          : savedPostIds.has(pIdStr) || savedPostIds.has(originalContentId),
+
+        // REPOST DURUMU
+        isRepostedByMe: post.parentComment
+          ? repostedCommentIds.has(originalContentId)
+          : repostedPostIds.has(originalContentId),
+
+        isOwner: currentUserId
+          ? post.user?._id?.toString() === currentUserId
+          : false,
+        image: post.image
+          ? post.image.startsWith("http")
+            ? post.image
+            : `http://localhost:5000${post.image}`
+          : null,
+        parentPost: post.parentPost ? formattedParent : null,
+        parentComment: post.parentComment ? formattedParent : null,
       };
     });
 
     res.status(200).json(formattedPosts);
   } catch (error) {
     console.error("getUserPosts Hatası:", error);
-    res.status(500).json({ message: "Kullanıcı postları getirilemedi" });
+    res.status(500).json({ message: "Postlar yüklenirken bir hata oluştu." });
   }
 };
 

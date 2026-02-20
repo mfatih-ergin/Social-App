@@ -24,12 +24,10 @@ const commentSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    likes: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    likesCount: {
+      type: Number,
+      default: 0,
+    },
     parentComment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Comment",
@@ -57,16 +55,5 @@ commentSchema.virtual("replies", {
   localField: "_id",
   foreignField: "parentComment",
 });
-
-// commentSchema.pre("findOneAndDelete", async function (next) {
-//   const commentId = this.getQuery()._id;
-//   try {
-//     const Post = mongoose.model("Post");
-//     await Post.deleteMany({ parentComment: commentId, isRepost: true });
-//     next();
-//   } catch (err) {
-//     next(err);
-//   }
-// });
 
 module.exports = mongoose.model("Comment", commentSchema);

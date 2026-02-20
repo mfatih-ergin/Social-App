@@ -10,11 +10,9 @@ const postSchema = new mongoose.Schema(
     },
     text: { type: String, trim: true },
     image: { type: String, default: "" },
-    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    likesCount: { type: Number, default: 0 },
     commentsCount: { type: Number, default: 0 },
-
     isRepost: { type: Boolean, default: false },
-
     parentPost: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
@@ -25,7 +23,6 @@ const postSchema = new mongoose.Schema(
       ref: "Comment",
       default: null,
     },
-
     repostsCount: { type: Number, default: 0 },
   },
   {
@@ -35,52 +32,36 @@ const postSchema = new mongoose.Schema(
   },
 );
 
-/*postSchema.pre("findOneAndDelete", async function (next) {
-  const docToDel = await this.model.findOne(this.getQuery());
-  if (docToDel) {
-    await mongoose.model("Comment").deleteMany({ post: docToDel._id });
-
-    if (docToDel.isRepost) {
-      if (docToDel.parentPost) {
-        await mongoose.model("Post").findByIdAndUpdate(docToDel.parentPost, {
-          $inc: { repostsCount: -1 },
-        });
-      } else if (docToDel.parentComment) {
-        await mongoose
-          .model("Comment")
-          .findByIdAndUpdate(docToDel.parentComment, {
-            $inc: { repostsCount: -1 },
-          });
-      }
-    }
-  }
-  next();
-});
-*/
-
 postSchema.pre("findOneAndDelete", async function () {
-  // Silinmek üzere olan dökümanı buluyoruz
   const docToDel = await this.model.findOne(this.getQuery());
 
   if (docToDel) {
-    // 1. Posta ait yorumları temizle
-    await mongoose.model("Comment").deleteMany({ post: docToDel._id });
+    try {
+      await mongoose.model("Like").deleteMany({ post: docToDel._id });
+      //console.log(`${docToDel._id} postuna ait beğeniler temizlendi.`);
 
-    // 2. Eğer bu bir repost ise, orijinal içeriğin sayacını düşür
-    if (docToDel.isRepost) {
-      if (docToDel.parentPost) {
-        // Orijinal Postun sayacını azalt
-        await mongoose.model("Post").findByIdAndUpdate(docToDel.parentPost, {
-          $inc: { repostsCount: -1 },
-        });
-      } else if (docToDel.parentComment) {
-        // Orijinal Yorumun sayacını azalt
-        await mongoose
-          .model("Comment")
-          .findByIdAndUpdate(docToDel.parentComment, {
+      await mongoose.model("Save").deleteMany({ post: docToDel._id });
+      //console.log(`${docToDel._id} postuna ait kaydedilenler temizlendi.`);
+
+      await mongoose.model("Comment").deleteMany({ post: docToDel._id });
+      //console.log(`${docToDel._id} postuna ait yorumlar temizlendi.`);
+
+      if (docToDel.isRepost) {
+        if (docToDel.parentPost) {
+          await mongoose.model("Post").findByIdAndUpdate(docToDel.parentPost, {
             $inc: { repostsCount: -1 },
           });
+        } else if (docToDel.parentComment) {
+          await mongoose
+            .model("Comment")
+            .findByIdAndUpdate(docToDel.parentComment, {
+              $inc: { repostsCount: -1 },
+            });
+        }
+        //console.log(`${docToDel._id} bir reposttu, parent sayacı düşürüldü.`);
       }
+    } catch (err) {
+      //console.error("Post silinirken ilişkili veriler temizlenemedi:", err);
     }
   }
 });

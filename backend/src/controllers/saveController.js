@@ -1,14 +1,17 @@
 const Save = require("../models/Save");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
+const Like = require("../models/Like"); // Yeni Beğeni modelini ekledik
 
+/**
+ * İçeriği kaydet veya kaydı kaldır
+ */
 const toggleSave = async (req, res) => {
   try {
     const { id } = req.params;
     const { type } = req.body;
     const userId = req.user._id || req.user.id;
 
-    // Dinamik sorgu oluşturma
     const query = { user: userId };
     if (type === "comment") {
       query.comment = id;
@@ -20,9 +23,10 @@ const toggleSave = async (req, res) => {
 
     if (existingSave) {
       await Save.findByIdAndDelete(existingSave._id);
-      return res
-        .status(200)
-        .json({ saved: false, message: "Kaydedilenlerden kaldırıldı" });
+      return res.status(200).json({
+        saved: false,
+        message: "Kaydedilenlerden kaldırıldı",
+      });
     } else {
       const newSave = new Save({
         user: userId,
@@ -30,7 +34,10 @@ const toggleSave = async (req, res) => {
         comment: type === "comment" ? id : null,
       });
       await newSave.save();
-      return res.status(201).json({ saved: true, message: "Kaydedildi" });
+      return res.status(201).json({
+        saved: true,
+        message: "Kaydedildi",
+      });
     }
   } catch (error) {
     console.error("Save Toggle Hatası:", error);
@@ -40,9 +47,35 @@ const toggleSave = async (req, res) => {
 
 const getSavedContent = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user._id.toString();
 
-    const savedItems = await Save.find({ user: userId })
+    // 1. Kontrol Set'lerini Hazırla (Like ve Repost durumları için)
+    let myLikedIds = new Set();
+    let repostedPostIds = new Set();
+    let repostedCommentIds = new Set();
+
+    const [userLikes, myReposts] = await Promise.all([
+      Like.find({ user: userId }),
+      Post.find({
+        user: userId,
+        isRepost: true,
+        $or: [{ text: "" }, { text: null }, { text: { $exists: false } }],
+      }).select("parentPost parentComment"),
+    ]);
+
+    userLikes.forEach((l) => {
+      if (l.post) myLikedIds.add(l.post.toString());
+      if (l.comment) myLikedIds.add(l.comment.toString());
+    });
+
+    myReposts.forEach((rp) => {
+      if (rp.parentPost) repostedPostIds.add(rp.parentPost.toString());
+      if (rp.parentComment) repostedCommentIds.add(rp.parentComment.toString());
+    });
+
+    // 2. Kaydedilen İçerikleri Getir
+    const savedContent = await Save.find({ user: userId })
+      .sort({ createdAt: -1 })
       .populate({
         path: "post",
         populate: [
@@ -61,54 +94,60 @@ const getSavedContent = async (req, res) => {
         path: "comment",
         populate: { path: "user", select: "username profileImage" },
       })
-      .sort({ createdAt: -1 });
+      .lean();
 
-    const formattedSaves = savedItems.map((item) => {
-      if (item.post) {
-        const postObj = item.post._doc || item.post;
+    // 3. Verileri Formatla
+    const formattedContent = savedContent
+      .map((saveDoc) => {
+        const isComment = !!saveDoc.comment;
+        const item = isComment ? saveDoc.comment : saveDoc.post;
+
+        if (!item) return null; // Silinmiş içerik kontrolü
+
+        const itemIdStr = item._id.toString();
+        const parent = item.parentPost || item.parentComment;
+        const originalId = parent ? parent._id.toString() : itemIdStr;
+
+        // Alıntı (Quote) Kontrolü
+        const isQuote =
+          item.isRepost && item.text && item.text.trim().length > 0;
+
         return {
-          ...item._doc,
-          post: {
-            ...postObj,
-            likesCount: postObj.likes ? postObj.likes.length : 0,
-            likedByCurrentUser: postObj.likes
-              ? postObj.likes.some((id) => id.toString() === userId.toString())
-              : false,
-            isSavedByMe: true,
-            image: postObj.image
-              ? postObj.image.startsWith("http")
-                ? postObj.image
-                : `http://localhost:5000${postObj.image}`
-              : null,
-            isComment: false,
-          },
-        };
-      }
+          ...item,
+          isComment,
+          userId: item.user?._id,
+          username: item.user?.username,
+          profileImage: item.user?.profileImage,
 
-      if (item.comment) {
-        const commentObj = item.comment._doc || item.comment;
-        return {
-          ...item._doc,
-          comment: {
-            ...commentObj,
-            likesCount: commentObj.likes ? commentObj.likes.length : 0,
-            likedByCurrentUser: commentObj.likes
-              ? commentObj.likes.some(
-                  (id) => id.toString() === userId.toString(),
-                )
-              : false,
-            isSavedByMe: true,
-            isComment: true,
-          },
-        };
-      }
-      return item;
-    });
+          // BEĞENİ DURUMU (Senkronize)
+          likesCount: item.likesCount || 0,
+          likedByCurrentUser: isQuote
+            ? myLikedIds.has(itemIdStr)
+            : myLikedIds.has(itemIdStr) || myLikedIds.has(originalId),
 
-    res.status(200).json(formattedSaves);
+          // KAYDETME DURUMU (Zaten kaydedilenlerdeyiz, o yüzden true)
+          isSavedByMe: true,
+
+          // REPOST DURUMU (KRİTİK EKSİK BURASIYDI)
+          isRepostedByMe: item.parentComment
+            ? repostedCommentIds.has(originalId)
+            : repostedPostIds.has(originalId),
+
+          image: item.image
+            ? item.image.startsWith("http")
+              ? item.image
+              : `http://localhost:5000${item.image}`
+            : null,
+
+          isOwner: item.user?._id?.toString() === userId,
+        };
+      })
+      .filter(Boolean);
+
+    res.json(formattedContent);
   } catch (error) {
     console.error("getSavedContent Hatası:", error);
-    res.status(500).json({ message: "Kaydedilenler getirilemedi" });
+    res.status(500).json({ message: "Kaydedilen içerikler getirilemedi." });
   }
 };
 

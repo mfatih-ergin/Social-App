@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { getCommentsByPostId } from "../../api/comment.api";
+import { useEffect, useState, useCallback } from "react";
+import { getCommentsByPostId, getReplies } from "../../api/comment.api";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import CommentCard from "./CommentCard";
@@ -7,6 +7,7 @@ import Loading from "../Loading";
 
 export default function CommentList({
   postId,
+  commentId,
   refreshTrigger,
   onCommentDeleted,
 }) {
@@ -17,39 +18,59 @@ export default function CommentList({
 
   const currentUserId = currentUser?._id || currentUser?.id;
 
-  const fetchComments = async () => {
-    if (!postId) return;
+  const fetchComments = useCallback(async () => {
+    if (!postId && !commentId) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await getCommentsByPostId(postId);
+      setLoading(true);
+      let res;
+
+      if (commentId) {
+        res = await getReplies(commentId);
+      } else {
+        res = await getCommentsByPostId(postId);
+      }
+
       const rawComments = Array.isArray(res.data) ? res.data : [];
 
-      const formattedComments = rawComments.map((comment) => ({
-        ...comment,
-        userId: comment.user?._id || comment.userId,
-        username: comment.user?.username || "Kullanıcı",
-        profileImage: comment.user?.profileImage,
-        image: comment.image ? `http://localhost:5000${comment.image}` : null,
-        likesCount: comment.likes?.length || 0,
-        isOwner:
-          currentUserId &&
-          (comment.user?._id === currentUserId ||
-            comment.userId === currentUserId),
-        likedByCurrentUser: currentUserId
-          ? comment.likes?.includes(currentUserId)
-          : false,
-      }));
+      const formattedComments = rawComments.map((comment) => {
+        return {
+          ...comment,
+          userId: comment.user?._id || comment.userId,
+          username: comment.user?.username || "Kullanıcı",
+          profileImage: comment.user?.profileImage,
+
+          image: comment.image
+            ? comment.image.startsWith("http")
+              ? comment.image
+              : `http://localhost:5000${comment.image}`
+            : null,
+
+          likesCount: comment.likesCount !== undefined ? comment.likesCount : 0,
+          likedByCurrentUser: !!comment.likedByCurrentUser,
+
+          isOwner: currentUserId
+            ? comment.user?._id?.toString() === currentUserId.toString() ||
+              comment.userId?.toString() === currentUserId.toString()
+            : false,
+        };
+      });
 
       setComments(formattedComments);
     } catch (err) {
       console.error("Yorumlar yüklenirken hata:", err);
+      setComments([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [postId, commentId, currentUserId]);
 
   useEffect(() => {
     fetchComments();
-  }, [postId, refreshTrigger, currentUserId]);
+  }, [fetchComments, refreshTrigger]);
 
   const handleCommentUpdate = () => {
     fetchComments();

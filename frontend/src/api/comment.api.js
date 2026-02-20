@@ -1,12 +1,12 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/comments"; // Kendi portuna göre düzenle
+const API_URL = "http://localhost:5000/api/comments";
 
 export const addComment = async (postId, formData) => {
   const response = await axios.post(`${API_URL}/${postId}`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${localStorage.getItem("token")}`, // Token'ı nasıl saklıyorsan
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
   });
   return response.data;
@@ -30,7 +30,6 @@ export const likeComment = (commentId) => {
   );
 };
 
-// Yorum silme
 export const deleteComment = (commentId) => {
   return axios.delete(`${API_URL}/${commentId}`, {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -39,7 +38,6 @@ export const deleteComment = (commentId) => {
 
 export const getCommentById = (commentId) => {
   return axios.get(`${API_URL}/detail/${commentId}`, {
-    // Backend'de /detail/:commentId yapmanı öneririm çakışmaması için
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },

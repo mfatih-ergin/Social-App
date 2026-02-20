@@ -4,20 +4,19 @@ const {
   addComment,
   getComments,
   deleteComment,
-  likeComment,
   getCommentById,
   getReplies,
 } = require("../controllers/commentController");
-const authMiddleware = require("../middleware/authMiddleware");
+const { protect, optional } = require("../middleware/authMiddleware");
 const upload = require("../middleware/multerMiddleware");
 
-router.post("/:postId", authMiddleware, upload.single("image"), addComment);
+router.post("/:postId", protect, upload.single("image"), addComment);
 
-router.get("/:postId", getComments);
-router.delete("/:id", authMiddleware, deleteComment);
-router.put("/:id/like", authMiddleware, likeComment);
+router.get("/:postId", optional, getComments);
 
-router.get("/detail/:id", getCommentById);
-router.get("/replies/:id", getReplies);
+router.delete("/:id", protect, deleteComment);
+
+router.get("/detail/:id", optional, getCommentById);
+router.get("/replies/:id", optional, getReplies);
 
 module.exports = router;

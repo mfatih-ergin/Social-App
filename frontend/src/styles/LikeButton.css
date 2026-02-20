@@ -2,6 +2,8 @@
 .like-btn {
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
 }
 
 /* Hover Efekti (Büyüme) */
@@ -26,23 +28,19 @@
   opacity: 0.6;
 }
 
-/* --- İKON YÖNETİMİ --- */
-
-/* Varsayılan: Boş ikon görünsün, Dolu ikon gizlensin */
-.like-btn .bi-hand-thumbs-up-fill {
-  display: none;
-}
-.like-btn .bi-hand-thumbs-up {
-  display: inline-block;
+/* Hoverda ve Liked durumunda ikonun görünür kalmasını sağlıyoruz */
+.like-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Hover veya Beğenilme durumunda: Dolu ikon görünsün, Boş ikon gizlensin */
-.like-btn:hover .bi-hand-thumbs-up-fill,
-.like-btn.liked .bi-hand-thumbs-up-fill {
-  display: inline-block;
+/* İkonların geçiş yumuşaklığı */
+.like-icon-wrapper i {
+  transition: color 0.2s ease;
 }
 
-.like-btn:hover .bi-hand-thumbs-up,
-.like-btn.liked .bi-hand-thumbs-up {
-  display: none;
+.like-btn.disabled {
+  pointer-events: none;
+  opacity: 0.6;
 }

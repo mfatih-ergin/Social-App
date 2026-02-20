@@ -1,24 +1,26 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useState, useCallback } from "react";
 
-const LikeContext = createContext();
+export const LikeContext = createContext(null);
 
 export const LikeProvider = ({ children }) => {
-
   const [globalLikes, setGlobalLikes] = useState({});
 
-  const updateGlobalLike = (postId, liked, count) => {
+  const updateGlobalLike = useCallback((id, liked, count) => {
     setGlobalLikes((prev) => ({
       ...prev,
-      [postId]: { liked, count },
+      [id]: { liked, count },
     }));
-  };
+  }, []);
 
-  const getLikeStatus = (postId, initialLiked, initialCount) => {
-    if (globalLikes[postId]) {
-      return globalLikes[postId];
-    }
-    return { liked: initialLiked, count: initialCount };
-  };
+  const getLikeStatus = useCallback(
+    (id, initialLiked, initialCount) => {
+      if (globalLikes[id]) {
+        return globalLikes[id];
+      }
+      return { liked: initialLiked, count: initialCount };
+    },
+    [globalLikes],
+  );
 
   return (
     <LikeContext.Provider value={{ updateGlobalLike, getLikeStatus }}>
@@ -26,5 +28,3 @@ export const LikeProvider = ({ children }) => {
     </LikeContext.Provider>
   );
 };
-
-export const useGlobalLike = () => useContext(LikeContext);

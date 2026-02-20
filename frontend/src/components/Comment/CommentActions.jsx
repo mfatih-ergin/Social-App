@@ -1,4 +1,4 @@
-import Like from "../Component/Actions/Like";
+import Like from "../Component/Actions/LikeButton";
 import CommentButton from "../Component/Actions/CommentButton";
 import SaveButton from "../Component/Actions/SaveButton";
 import RepostButton from "../Component/Actions/RepostButton";
@@ -19,7 +19,7 @@ export default function CommentActions({
     <div className="d-flex justify-content-between align-items-center pt-1">
       <div className="d-flex align-items-center gap-4 w-100">
         <Like
-          postId={commentId}
+          id={commentId}
           likedByCurrentUser={likedByCurrentUser}
           likesCount={likesCount}
           isComment={true}

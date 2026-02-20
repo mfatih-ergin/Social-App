@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getUserPosts } from "../../api/user.api";
-import { getLikedContent } from "../../api/post.api";
+import { getLikedContent } from "../../api/like.api";
 import { getSavedContent } from "../../api/save.api";
 import { useTheme } from "../../context/ThemeContext";
 import PostCard from "../Post/PostCard";
@@ -34,12 +34,17 @@ export default function ProfileContent({
         res = await getSavedContent();
       }
 
-      if (activeTab === "saved") {
+      if (activeTab === "saved" || activeTab === "likes") {
         const flattenedData = (res.data || [])
           .map((item) => {
+            // Eğer doğrudan post/comment geliyorsa (bazı eski API'ler gibi)
+            if (item.isComment !== undefined) return item;
+
+            // Yeni mimari: likeDoc.post veya likeDoc.comment içinden veriyi çıkar
             if (item.post) return { ...item.post, isComment: false };
             if (item.comment) return { ...item.comment, isComment: true };
-            return null;
+
+            return item; // Zaten düz ise olduğu gibi bırak
           })
           .filter(Boolean);
         setData(flattenedData);

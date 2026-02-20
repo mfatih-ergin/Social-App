@@ -4,40 +4,22 @@ const {
   createPost,
   getPosts,
   getExplore,
-  likePost,
   deletePost,
-  /*getLikedPosts,*/
   getPostById,
-  getLikedContent,
   repostContent,
 } = require("../controllers/postController");
-const authMiddleware = require("../middleware/authMiddleware");
-const exploreAuthMiddleware = require("../middleware/exploreAuthMiddleware");
-const { optionalPostAuth } = require("../middleware/postMiddleware");
-const upload = require("../middleware/multerMiddleware"); // Ortak multer dosyasını içe aktarıyoruz
+const { protect, optional } = require("../middleware/authMiddleware");
+const upload = require("../middleware/multerMiddleware");
 
-// Gönderileri getir (Home)
-router.get("/", authMiddleware, getPosts);
-router.get("/home", authMiddleware, getPosts);
-router.get("/explore", exploreAuthMiddleware, getExplore);
+router.get("/", protect, getPosts);
+router.get("/home", protect, getPosts);
+router.get("/explore", optional, getExplore);
 
-// Yeni gönderi oluştur - Resim desteği upload middleware ile sağlanıyor
-router.post("/create", authMiddleware, upload.single("image"), createPost);
-router.post(
-  "/repost/:id",
-  authMiddleware,
-  upload.single("image"),
-  repostContent,
-);
+router.post("/create", protect, upload.single("image"), createPost);
+router.post("/repost/:id", protect, upload.single("image"), repostContent);
 
-// Kullanıcının beğendiği gönderileri getir
-/*router.get("/user/:userId/likes", authMiddleware, getLikedPosts);*/
-router.get("/user/:userId/likes", authMiddleware, getLikedContent);
+router.delete("/delete/:id", protect, deletePost);
 
-// Beğeni ve silme işlemleri
-router.put("/:id/like", authMiddleware, likePost);
-router.delete("/delete/:id", authMiddleware, deletePost);
-
-router.get("/:id", optionalPostAuth, getPostById);
+router.get("/:id", optional, getPostById);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import Like from "./Like";
+import Like from "./LikeButton";
 import CommentButton from "./CommentButton";
 import SaveButton from "./SaveButton";
 import RepostButton from "./RepostButton";
@@ -19,7 +19,7 @@ export default function PostActions({
     <div className="d-flex justify-content-between align-items-center pt-1">
       <div className="d-flex align-items-center gap-4">
         <Like
-          postId={postId}
+          id={postId}
           likedByCurrentUser={likedByCurrentUser}
           likesCount={likesCount}
         />

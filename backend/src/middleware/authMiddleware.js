@@ -1,36 +1,59 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const authMiddleware = async (req, res, next) => {
+const protect = async (req, res, next) => {
   let token;
 
-  // Header'dan token al
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     try {
       token = req.headers.authorization.split(" ")[1];
-
-      // Token doğrula
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Kullanıcıyı ekle (şifre hariç)
-      //req.user = await User.findById(decoded.id).select("-password"); // geriye _id, username, email döner
 
       req.user = await User.findById(decoded.id).select(
         "username email _id followers following",
-      ); // geriye _id, username, email, followers, following döner
+      );
 
-      next();
+      if (!req.user) {
+        return res.status(401).json({ message: "Kullanıcı bulunamadı" });
+      }
+
+      return next();
     } catch (error) {
       return res.status(401).json({ message: "Token geçersiz" });
     }
   }
 
   if (!token) {
-    return res.status(401).json({ message: "Token yok" });
+    return res.status(401).json({ message: "Token yok, yetkisiz erişim" });
   }
 };
 
-module.exports = authMiddleware;
+const optional = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token =
+      authHeader && authHeader.startsWith("Bearer")
+        ? authHeader.split(" ")[1]
+        : null;
+
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select(
+      "username email _id followers following",
+    );
+
+    next();
+  } catch (error) {
+    req.user = null;
+    next();
+  }
+};
+
+module.exports = { protect, optional };
