@@ -81,7 +81,7 @@ export default function CommentList({
 
   return (
     <div
-      className={`comment-list-section ${theme === "dark" ? "bg-black" : "bg-white"}`}
+      className={`comment-list-section p-0 ${theme === "dark" ? "bg-black" : "bg-white"}`}
     >
       {comments.length === 0 ? (
         <div className="p-5 text-center text-secondary">

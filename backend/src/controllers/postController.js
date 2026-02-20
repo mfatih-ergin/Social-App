@@ -216,29 +216,49 @@ const deletePost = async (req, res) => {
         .json({ message: "Bu işlemi yapmak için yetkiniz yok" });
     }
 
+    // 1. Postun Kendi Resmini Sil
+    if (post.image) {
+      const postImagePath = path.join(process.cwd(), post.image);
+      if (fs.existsSync(postImagePath)) fs.unlinkSync(postImagePath);
+    }
+
+    // 2. Posta Ait Yorumların Resimlerini Sil
+    const comments = await Comment.find({ post: id });
+    comments.forEach((comment) => {
+      if (comment.image) {
+        const commentImagePath = path.join(process.cwd(), comment.image);
+        if (fs.existsSync(commentImagePath)) {
+          try {
+            fs.unlinkSync(commentImagePath);
+            console.log("Yorum resmi silindi:", comment.image);
+          } catch (err) {
+            console.error("Yorum resmi silinirken hata:", err);
+          }
+        }
+      }
+    });
+
+    // 3. Veritabanı Temizliği (İlişkili her şeyi sil)
     try {
-      await Like.deleteMany({ post: id });
-      console.log(`${id} postuna ait beğeniler temizlendi.`);
-
-      await Save.deleteMany({ post: id });
-      console.log(`${id} postuna ait kaydedilenler temizlendi.`);
-
-      await Post.deleteMany({ parentPost: id });
-      console.log(`${id} postuna ait repostlar temizlendi.`);
-
-      await Comment.deleteMany({ post: id });
-      console.log(`${id} postuna ait yorumlar temizlendi.`);
+      await Promise.all([
+        Like.deleteMany({ post: id }),
+        Save.deleteMany({ post: id }),
+        Post.deleteMany({ parentPost: id }), // Repostları sil
+        Comment.deleteMany({ post: id }), // Yorumları sil (Resimleri yukarıda sildik)
+        Like.deleteMany({ comment: { $in: comments.map((c) => c._id) } }), // Yorumların beğenilerini de sil
+      ]);
     } catch (dbErr) {
       console.error("İlişkili veriler silinirken hata:", dbErr);
     }
 
+    // 4. Ana Postu Sil
     await Post.findByIdAndDelete(id);
 
     res
       .status(200)
-      .json({ message: "Gönderi ve ilişkili tüm veriler başarıyla silindi" });
+      .json({ message: "Gönderi, yorumlar ve tüm medya dosyaları silindi." });
   } catch (error) {
-    console.error("Post silme hatası (Detaylı):", error);
+    console.error("Post silme hatası:", error);
     res.status(500).json({ message: "Sunucu hatası", error: error.message });
   }
 };

@@ -12,7 +12,7 @@ import Register from "./pages/RegisterPage";
 import Profile from "./pages/ProfilePage";
 
 import Settings from "./pages/Settings";
-import PostPage from "./pages/PostPage";
+import Thread from "./pages/ThreadPage";
 
 function App() {
   const location = useLocation();
@@ -50,14 +50,10 @@ function App() {
               <Route path="/explore" element={<Explore />} />
               <Route path="/profile/:id" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
-              {/* <Route path="/post/:postId" element={<PostPage />} /> */}
-              <Route
-                path="/post/:contentId"
-                element={<PostPage type="post" />}
-              />
+              <Route path="/post/:contentId" element={<Thread type="post" />} />
               <Route
                 path="/comment/:contentId"
-                element={<PostPage type="comment" />}
+                element={<Thread type="comment" />}
               />
             </Routes>
           </main>

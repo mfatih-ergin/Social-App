@@ -1,36 +1,50 @@
 /* RepostCard.css */
 
-.repost-ghost-view {
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-  /* Üst-Alt: 1.25rem | Sağ-Sol: 1rem (İstediğin boşluk) */
-  margin: 1.25rem 1rem;
-  /* Genişliği yanlardaki boşluğa göre ayarlar */
-  width: calc(100% - 2rem);
-  display: block;
-  background: transparent !important;
-  border: none !important;
+.repost-container-wrapper {
+  margin-top: 10px;
+  margin-bottom: 4px;
+  width: 100%;
 }
 
-.repost-ghost-view:hover {
-  opacity: 0.8;
+.repost-container-wrapper .card-layout {
+  border: 1px solid #eff3f4 !important; 
+  border-radius: 12px !important;
+  margin-bottom: 0;
 }
 
-.repost-text-clean {
+.dark .repost-container-wrapper .card-layout {
+  border: 1px solid #2f3336 !important;
+  background-color: transparent;
+}
+
+.repost-content .content-text {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.5;
-  font-size: 0.95rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
   word-break: break-word;
   white-space: pre-wrap;
+  margin-bottom: 8px;
 }
 
-.repost-mini-image img {
-  display: block;
+.repost-content .post-media-wrapper {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.repost-content .post-image {
   width: 100%;
+  max-height: 300px;
   object-fit: cover;
-  border: none;
+}
+
+.repost-container-wrapper:hover .card-layout {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+.dark .repost-container-wrapper:hover .card-layout {
+  background-color: rgba(255, 255, 255, 0.03) !important;
 }

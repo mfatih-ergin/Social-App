@@ -8,24 +8,32 @@ const mongoose = require("mongoose");
 const addComment = async (req, res) => {
   try {
     const { postId } = req.params;
-    const { text } = req.body;
+    const { text, parentComment } = req.body;
     const userId = req.user._id;
     const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
 
     const newComment = new Comment({
       post: postId,
       user: userId,
-      text,
+      text: text || "",
       image: imagePath,
+      parentComment: parentComment || null,
       likesCount: 0,
     });
 
     await newComment.save();
 
-    await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
+    if (!parentComment) {
+      await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
+    } else {
+      await Comment.findByIdAndUpdate(parentComment, {
+        $inc: { repliesCount: 1 },
+      });
+    }
 
     res.status(201).json(newComment);
   } catch (error) {
+    console.error("Yorum ekleme hatası:", error);
     res.status(500).json({ message: "Yorum eklenemedi" });
   }
 };
@@ -68,12 +76,14 @@ const getComments = async (req, res) => {
         userId: comment.user?._id,
         username: comment.user?.username,
         profileImage: comment.user?.profileImage,
-
         likedByCurrentUser: likedCommentIds.has(cIdStr),
         isRepostedByMe: repostedCommentIds.has(cIdStr),
-
         isOwner: userId ? comment.user?._id?.toString() === userId : false,
-        image: comment.image ? `http://localhost:5000${comment.image}` : null,
+        image: comment.image
+          ? comment.image.startsWith("http")
+            ? comment.image
+            : `http://localhost:5000${comment.image}`
+          : null,
       };
     });
 
@@ -149,41 +159,54 @@ const getReplies = async (req, res) => {
 
     const replies = await Comment.find({ parentComment: req.params.id })
       .populate("user", "username profileImage")
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: 1 })
+      .lean();
 
-    const formattedReplies = await Promise.all(
-      replies.map(async (reply) => {
-        const replyObj = reply._doc || reply;
-        const rIdStr = replyObj._id.toString();
+    let likedCommentIds = new Set();
+    let repostedCommentIds = new Set();
 
-        let isRepostedByMe = false;
-        if (userId) {
-          const repostExists = await Post.findOne({
-            user: new mongoose.Types.ObjectId(userId),
-            isRepost: true,
-            parentComment: new mongoose.Types.ObjectId(rIdStr),
-            $or: [{ text: "" }, { text: { $exists: false } }, { text: null }],
-          });
-          isRepostedByMe = !!repostExists;
-        }
+    if (userId) {
+      const [likes, reposts] = await Promise.all([
+        Like.find({ user: userId, comment: { $exists: true } }),
+        Post.find({
+          user: userId,
+          isRepost: true,
+          parentComment: { $exists: true },
+          $or: [{ text: "" }, { text: null }, { text: { $exists: false } }],
+        }),
+      ]);
 
-        return {
-          ...replyObj,
-          isOwner: userId ? replyObj.user?._id?.toString() === userId : false,
-          likedByCurrentUser: userId
-            ? replyObj.likes.some((id) => id.toString() === userId)
-            : false,
-          isRepostedByMe: isRepostedByMe,
-          likesCount: replyObj.likes.length,
-          image: replyObj.image
-            ? `http://localhost:5000${replyObj.image}`
-            : null,
-          username: replyObj.user?.username,
-          profileImage: replyObj.user?.profileImage,
-          userId: replyObj.user?._id,
-        };
-      }),
-    );
+      likes.forEach((l) => likedCommentIds.add(l.comment?.toString()));
+      reposts.forEach((r) =>
+        repostedCommentIds.add(r.parentComment?.toString()),
+      );
+    }
+
+    const formattedReplies = replies.map((reply) => {
+      const rIdStr = reply._id.toString();
+
+      return {
+        ...reply,
+        isComment: true,
+        isOwner: userId ? reply.user?._id?.toString() === userId : false,
+
+        likedByCurrentUser: likedCommentIds.has(rIdStr),
+        isRepostedByMe: repostedCommentIds.has(rIdStr),
+
+        likesCount: reply.likesCount || 0,
+        repliesCount: reply.repliesCount || 0,
+
+        image: reply.image
+          ? reply.image.startsWith("http")
+            ? reply.image
+            : `http://localhost:5000${reply.image}`
+          : null,
+
+        username: reply.user?.username || "Kullanıcı",
+        profileImage: reply.user?.profileImage,
+        userId: reply.user?._id,
+      };
+    });
 
     res.json(formattedReplies);
   } catch (error) {

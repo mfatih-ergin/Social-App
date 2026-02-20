@@ -1,0 +1,95 @@
+/* CardLayout.css */
+
+/* --- ANA KART YAPISI --- */
+.card-layout {
+  overflow: hidden;
+  transition: background-color 0.2s ease-in-out;
+  border-bottom: 1px solid #eff3f4;
+  background-color: #ffffff;
+  color: #0f1419;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* KOYU TEMA */
+.card-layout.dark {
+  background-color: #000000;
+  border-bottom: 1px solid #2f3336;
+  color: #e7e9ea;
+}
+
+/* HOVER EFEKTLERİ */
+.card-layout-clickable { cursor: pointer; }
+.card-layout-clickable:hover { background-color: rgba(0, 0, 0, 0.03); }
+.card-layout.dark.card-layout-clickable:hover { background-color: rgba(255, 255, 255, 0.03); }
+
+/* YANIT (REPLY) ÖZELLİĞİ - Tüm girinti ve çizgiler kaldırıldı */
+.card-layout.reply-style {
+  padding-left: 0; 
+  border-left: none;
+}
+
+.card-layout-body {
+  padding: 12px 16px;
+}
+
+/* --- RESİM VE MEDYA DÜZENİ (AKILLI BOYUTLANDIRMA) --- */
+.post-media-wrapper {
+  display: block;
+  width: fit-content; 
+  max-width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #eff3f4;
+  margin-top: 10px;
+  margin-left: 0;
+}
+
+.dark .post-media-wrapper {
+  border-color: #2f3336;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.post-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 550px; 
+  object-fit: contain;
+}
+
+/* --- AYIRICI ÇİZGİ --- */
+.card-separator {
+  margin: 12px 0;
+  border: 0;
+  border-top: 1px solid #eff3f4;
+}
+.dark .card-separator { border-top: 1px solid #2f3336; }
+
+/* --- METİN STİLLERİ --- */
+.content-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  word-wrap: break-word;
+  margin-bottom: 8px;
+  color: inherit;
+}
+
+/* SİLME DURUMU */
+.card-layout-deleting {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* MOBİL UYUM */
+@media (max-width: 600px) {
+  .card-layout {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+}
