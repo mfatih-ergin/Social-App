@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   toggleLike,
   getLikedContent,
-} = require("../controllers/likeController");
+} = require("../controllers/like.controller");
 const { protect } = require("../middleware/authMiddleware");
 
 router.post("/like", protect, toggleLike);

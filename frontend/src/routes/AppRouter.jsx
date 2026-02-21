@@ -1,57 +1,67 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-import LoginPage from "../pages/LoginPage";
-import RegisterPage from "../pages/RegisterPage";
-import Feed from "../pages/Feed";
-import Explore from "../pages/Explore";
-import ProfilePage from "../pages/ProfilePage";
-import ChatPage from "../pages/ChatPage";
-
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import PrivateRoute from "./PrivateRoute";
 
+import Home from "../pages/Home";
+import Explore from "../pages/Explore";
+import LoginPage from "../pages/LoginPage";
+import RegisterPage from "../pages/RegisterPage";
+import ProfilePage from "../pages/ProfilePage";
+import BookmarksPage from "../pages/BookmarksPage";
+import Settings from "../pages/Settings";
+import ThreadPage from "../pages/ThreadPage";
+
 export default function AppRouter() {
+  const { user } = useAuth();
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/explore" element={<Explore />} />
+      <Route path="/home" element={<Home />} />
 
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Feed />
-            </PrivateRoute>
-          }
-        />
+      <Route path="/post/:contentId" element={<ThreadPage type="post" />} />
+      <Route
+        path="/comment/:contentId"
+        element={<ThreadPage type="comment" />}
+      />
 
-        <Route
-          path="/explore"
-          element={
-            <PrivateRoute>
-              <Explore />
-            </PrivateRoute>
-          }
-        />
+      <Route
+        path="/bookmarks"
+        element={
+          <PrivateRoute>
+            <BookmarksPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <PrivateRoute>
+            <Settings />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile/:id"
+        element={
+          <PrivateRoute>
+            <ProfilePage />
+          </PrivateRoute>
+        }
+      />
 
-        <Route
-          path="/profile/:id"
-          element={
-            <PrivateRoute>
-              <ProfilePage />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/chat"
-          element={
-            <PrivateRoute>
-              <ChatPage />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+      <Route
+        path="/"
+        element={
+          user ? (
+            <Navigate to="/home" replace />
+          ) : (
+            <Navigate to="/explore" replace />
+          )
+        }
+      />
+    </Routes>
   );
 }

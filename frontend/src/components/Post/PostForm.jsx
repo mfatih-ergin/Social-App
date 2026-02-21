@@ -74,7 +74,7 @@ export default function PostForm({ onPostCreated }) {
             <textarea
               className={`form-control border-0 shadow-none fs-5 p-0 mt-1 post-textarea ${theme === "dark" ? "text-white" : "text-dark"}`}
               rows="2"
-              placeholder="Gönderi paylaş..."
+              placeholder="Gönderi paylaş"
               style={{
                 resize: "none",
                 backgroundColor: "transparent",

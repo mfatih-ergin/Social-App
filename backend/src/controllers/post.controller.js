@@ -2,17 +2,39 @@ const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const Save = require("../models/Save");
 const Like = require("../models/Like");
+const User = require("../models/User");
+
 const fs = require("fs");
 const path = require("path");
 
-const formatPostData = async (post, userId, savedPostIds, savedCommentIds) => {
+const formatPostData = async (
+  post,
+  userId,
+  userSavesMap,
+  currentUserFollowing = null,
+) => {
   const postObj = post._doc || post;
+  if (!postObj || !postObj._id) return null;
   const pIdStr = postObj._id.toString();
+  const postAuthorId = postObj.user?._id || postObj.user;
+
+  let isFollowingByMe = false;
+  if (userId && postAuthorId && userId !== postAuthorId.toString()) {
+    let followingList = currentUserFollowing;
+    if (!followingList) {
+      const me = await User.findById(userId).select("following").lean();
+      followingList = me?.following || [];
+    }
+
+    isFollowingByMe = followingList.some(
+      (id) => id.toString() === postAuthorId.toString(),
+    );
+  }
 
   const isMyDirectRepost =
     postObj.isRepost &&
     userId &&
-    postObj.user?._id?.toString() === userId &&
+    postAuthorId?.toString() === userId &&
     !postObj.text;
 
   let isRepostedByMe = false;
@@ -35,39 +57,53 @@ const formatPostData = async (post, userId, savedPostIds, savedCommentIds) => {
     likedByCurrentUser = !!likeExists;
   }
 
-  const isOwner =
-    userId && postObj.user?._id
-      ? postObj.user?._id?.toString() === userId
-      : false;
+  const finalMap = userSavesMap instanceof Map ? userSavesMap : new Map();
+  const savedData = finalMap.get(pIdStr);
+  const isSavedByMe = !!savedData;
+  const collectionIds = savedData || [];
 
-  const isSavedByMe = savedPostIds.has(pIdStr);
+  const isOwner =
+    userId && postAuthorId ? postAuthorId.toString() === userId : false;
 
   let formattedParent = null;
   const parentSource = postObj.parentPost || postObj.parentComment;
 
   if (parentSource) {
     const parentIdStr = parentSource._id.toString();
+    const parentDoc = parentSource._doc || parentSource;
+    const parentAuthorId = parentDoc.user?._id || parentDoc.user;
 
     let parentLikedByMe = false;
+    let parentFollowingByMe = false;
+
     if (userId) {
       const parentLikeExists = await Like.findOne({
         user: userId,
         $or: [{ post: parentIdStr }, { comment: parentIdStr }],
       });
       parentLikedByMe = !!parentLikeExists;
+
+      if (parentAuthorId && userId !== parentAuthorId.toString()) {
+        let followingList = currentUserFollowing;
+        if (!followingList) {
+          const me = await User.findById(userId).select("following").lean();
+          followingList = me?.following || [];
+        }
+        parentFollowingByMe = followingList.some(
+          (id) => id.toString() === parentAuthorId.toString(),
+        );
+      }
     }
 
-    const parentSavedByMe = postObj.parentPost
-      ? savedPostIds.has(parentIdStr)
-      : savedCommentIds.has(parentIdStr);
-
-    const parentDoc = parentSource._doc || parentSource;
+    const pSavedData = finalMap.get(parentIdStr);
 
     formattedParent = {
       ...parentDoc,
       likesCount: parentDoc.likesCount || 0,
       likedByCurrentUser: parentLikedByMe,
-      isSavedByMe: parentSavedByMe,
+      isFollowingByMe: parentFollowingByMe,
+      isSavedByMe: !!pSavedData,
+      collectionIds: pSavedData || [],
       image: parentDoc.image
         ? parentDoc.image.startsWith("http")
           ? parentDoc.image
@@ -78,7 +114,7 @@ const formatPostData = async (post, userId, savedPostIds, savedCommentIds) => {
 
   return {
     _id: postObj._id,
-    userId: postObj.user?._id,
+    userId: postAuthorId,
     username: postObj.user?.username,
     profileImage: postObj.user?.profileImage,
     text: postObj.text,
@@ -88,10 +124,12 @@ const formatPostData = async (post, userId, savedPostIds, savedCommentIds) => {
     likesCount: postObj.likesCount || 0,
     isRepost: postObj.isRepost || false,
     isRepostedByMe: isRepostedByMe,
+    isFollowingByMe: isFollowingByMe,
     parentPost: postObj.parentPost ? formattedParent : null,
     parentComment: postObj.parentComment ? formattedParent : null,
     likedByCurrentUser,
     isSavedByMe,
+    collectionIds,
     isOwner: isOwner,
     createdAt: postObj.createdAt,
   };
@@ -125,19 +163,23 @@ const createPost = async (req, res) => {
       commentsCount: 0,
     });
   } catch (error) {
-    console.error("Hata:", error);
+    console.error("Create Post Hatası:", error);
     res.status(500).json({ message: "Post oluşturulamadı" });
   }
 };
 
 const getPosts = async (req, res) => {
   try {
-    const userId = req.user._id.toString();
-    const userSaves = await Save.find({ user: userId });
-    const savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
-    const savedCommentIds = new Set(
-      userSaves.map((s) => s.comment?.toString()),
-    );
+    const userId = req.user?._id?.toString();
+    const userSavesMap = new Map();
+
+    if (userId) {
+      const userSaves = await Save.find({ user: userId }).lean();
+      userSaves.forEach((s) => {
+        const key = (s.post || s.comment)?.toString();
+        if (key) userSavesMap.set(key, s.collectionIds || [null]);
+      });
+    }
 
     const posts = await Post.find()
       .populate("user", "username email profileImage")
@@ -152,13 +194,12 @@ const getPosts = async (req, res) => {
       .sort({ createdAt: -1 });
 
     const postsWithInfo = await Promise.all(
-      posts.map((post) =>
-        formatPostData(post, userId, savedPostIds, savedCommentIds),
-      ),
+      posts.map((post) => formatPostData(post, userId, userSavesMap)),
     );
 
     res.json(postsWithInfo);
   } catch (error) {
+    console.error("getPosts Hatası:", error);
     res.status(500).json({ message: "Postlar alınamadı" });
   }
 };
@@ -166,16 +207,22 @@ const getPosts = async (req, res) => {
 const getExplore = async (req, res) => {
   try {
     const userId = req.user?._id?.toString();
-    let savedPostIds = new Set();
-    let savedCommentIds = new Set();
+    const userSavesMap = new Map();
 
     if (userId) {
-      const userSaves = await Save.find({ user: userId });
-      savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
-      savedCommentIds = new Set(userSaves.map((s) => s.comment?.toString()));
+      const userSaves = await Save.find({ user: userId }).lean();
+      userSaves.forEach((s) => {
+        const key = (s.post || s.comment)?.toString();
+        if (key) userSavesMap.set(key, s.collectionIds || [null]);
+      });
     }
 
-    const posts = await Post.find()
+    let query = {};
+    if (!userId) {
+      query.isRepost = false;
+    }
+
+    const posts = await Post.find(query)
       .populate("user", "username profileImage")
       .populate({
         path: "parentPost",
@@ -188,78 +235,13 @@ const getExplore = async (req, res) => {
       .sort({ createdAt: -1 });
 
     const postsWithInfo = await Promise.all(
-      posts.map((post) =>
-        formatPostData(post, userId, savedPostIds, savedCommentIds),
-      ),
+      posts.map((post) => formatPostData(post, userId, userSavesMap)),
     );
 
     res.json(postsWithInfo);
   } catch (error) {
+    console.error("getExplore Hatası:", error);
     res.status(500).json({ message: "Explore alınamadı" });
-  }
-};
-
-const deletePost = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user._id;
-
-    const post = await Post.findById(id);
-
-    if (!post) {
-      return res.status(404).json({ message: "Gönderi bulunamadı" });
-    }
-
-    if (post.user.toString() !== userId.toString()) {
-      return res
-        .status(403)
-        .json({ message: "Bu işlemi yapmak için yetkiniz yok" });
-    }
-
-    // 1. Postun Kendi Resmini Sil
-    if (post.image) {
-      const postImagePath = path.join(process.cwd(), post.image);
-      if (fs.existsSync(postImagePath)) fs.unlinkSync(postImagePath);
-    }
-
-    // 2. Posta Ait Yorumların Resimlerini Sil
-    const comments = await Comment.find({ post: id });
-    comments.forEach((comment) => {
-      if (comment.image) {
-        const commentImagePath = path.join(process.cwd(), comment.image);
-        if (fs.existsSync(commentImagePath)) {
-          try {
-            fs.unlinkSync(commentImagePath);
-            console.log("Yorum resmi silindi:", comment.image);
-          } catch (err) {
-            console.error("Yorum resmi silinirken hata:", err);
-          }
-        }
-      }
-    });
-
-    // 3. Veritabanı Temizliği (İlişkili her şeyi sil)
-    try {
-      await Promise.all([
-        Like.deleteMany({ post: id }),
-        Save.deleteMany({ post: id }),
-        Post.deleteMany({ parentPost: id }), // Repostları sil
-        Comment.deleteMany({ post: id }), // Yorumları sil (Resimleri yukarıda sildik)
-        Like.deleteMany({ comment: { $in: comments.map((c) => c._id) } }), // Yorumların beğenilerini de sil
-      ]);
-    } catch (dbErr) {
-      console.error("İlişkili veriler silinirken hata:", dbErr);
-    }
-
-    // 4. Ana Postu Sil
-    await Post.findByIdAndDelete(id);
-
-    res
-      .status(200)
-      .json({ message: "Gönderi, yorumlar ve tüm medya dosyaları silindi." });
-  } catch (error) {
-    console.error("Post silme hatası:", error);
-    res.status(500).json({ message: "Sunucu hatası", error: error.message });
   }
 };
 
@@ -281,22 +263,59 @@ const getPostById = async (req, res) => {
 
     if (!post) return res.status(404).json({ message: "Gönderi bulunamadı" });
 
-    let savedPostIds = new Set();
-    let savedCommentIds = new Set();
+    const userSavesMap = new Map();
     if (userId) {
-      const userSaves = await Save.find({ user: userId });
-      savedPostIds = new Set(userSaves.map((s) => s.post?.toString()));
-      savedCommentIds = new Set(userSaves.map((s) => s.comment?.toString()));
+      const userSaves = await Save.find({ user: userId }).lean();
+      userSaves.forEach((s) => {
+        const key = (s.post || s.comment)?.toString();
+        if (key) userSavesMap.set(key, s.collectionIds || [null]);
+      });
     }
 
-    const formatted = await formatPostData(
-      post,
-      userId,
-      savedPostIds,
-      savedCommentIds,
-    );
+    const formatted = await formatPostData(post, userId, userSavesMap);
     res.status(200).json(formatted);
   } catch (error) {
+    console.error("getPostById Hatası:", error);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+const deletePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: "Gönderi bulunamadı" });
+    if (post.user.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Yetkisiz işlem" });
+    }
+
+    if (post.image) {
+      const postImagePath = path.join(process.cwd(), post.image);
+      if (fs.existsSync(postImagePath)) fs.unlinkSync(postImagePath);
+    }
+
+    const comments = await Comment.find({ post: id });
+    comments.forEach((comment) => {
+      if (comment.image) {
+        const cp = path.join(process.cwd(), comment.image);
+        if (fs.existsSync(cp)) fs.unlinkSync(cp);
+      }
+    });
+
+    await Promise.all([
+      Like.deleteMany({ post: id }),
+      Save.deleteMany({ post: id }),
+      Post.deleteMany({ parentPost: id }),
+      Comment.deleteMany({ post: id }),
+      Like.deleteMany({ comment: { $in: comments.map((c) => c._id) } }),
+    ]);
+
+    await Post.findByIdAndDelete(id);
+    res.status(200).json({ message: "Gönderi silindi." });
+  } catch (error) {
+    console.error("Post silme hatası:", error);
     res.status(500).json({ message: "Sunucu hatası" });
   }
 };
@@ -343,7 +362,8 @@ const repostContent = async (req, res) => {
     await newRepost.save();
     res.status(201).json({ action: "repost" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Repost hatası:", error);
+    res.status(500).json({ message: "İşlem başarısız" });
   }
 };
 

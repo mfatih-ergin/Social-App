@@ -6,7 +6,7 @@ export default function HomePostList({ posts, fetchPosts }) {
   const isDark = theme === "dark";
 
   return (
-    <div className="d-flex flex-column gap-3 px-2">
+    <div className="d-flex flex-column">
       {posts.length > 0 ? (
         posts.map((post) => (
           <PostCard key={post._id} post={post} onUpdate={fetchPosts} />

@@ -24,9 +24,17 @@
 /* HOVER EFEKTLERİ */
 .card-layout-clickable { cursor: pointer; }
 .card-layout-clickable:hover { background-color: rgba(0, 0, 0, 0.03); }
-.card-layout.dark.card-layout-clickable:hover { background-color: rgba(255, 255, 255, 0.03); }
+.card-layout.dark.card-layout-clickable:hover {
+    background-color: #121212 !important; 
+    border-bottom-color: #3d4144 !important;
+    transition: background-color 0.15s ease-in-out;
+}
 
-/* YANIT (REPLY) ÖZELLİĞİ - Tüm girinti ve çizgiler kaldırıldı */
+.card-layout.dark.card-layout-clickable:hover .content-text {
+    color: #ffffff;
+}
+
+
 .card-layout.reply-style {
   padding-left: 0; 
   border-left: none;

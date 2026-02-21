@@ -53,29 +53,23 @@ export default function Home() {
       <div className="container-fluid">
         <div className="row justify-content-center">
           <div
-            className={`col-12 col-md-8 col-lg-6 border-start border-end min-vh-100 p-0 ${isDark ? "border-secondary" : ""}`}
+            className={`col-12 col-md-8 col-lg-6 border-start border-end min-vh-100 p-0 ${isDark ? "border-secondary" : "border-light"}`}
           >
-            <div className="px-3">
-              {isLoading ? (
-                <div className="pt-5">
-                  <Loading message="Ana Sayfa Yükleniyor..." />
+            <HomeHeader />
+
+            {isLoading ? (
+              <div className="pt-5">
+                <Loading message="Ana Sayfa Yükleniyor..." />
+              </div>
+            ) : (
+              <div>
+                <div>
+                  <PostForm onPostCreated={fetchPosts} />
                 </div>
-              ) : (
-                <div className="pt-2">
-                  <HomeHeader />
 
-                  <div className="mb-4">
-                    <PostForm onPostCreated={fetchPosts} />
-                  </div>
-
-                  <hr
-                    className={`my-4 opacity-25 ${isDark ? "text-secondary border-secondary" : ""}`}
-                  />
-
-                  <HomePostList posts={posts} fetchPosts={fetchPosts} />
-                </div>
-              )}
-            </div>
+                <HomePostList posts={posts} fetchPosts={fetchPosts} />
+              </div>
+            )}
           </div>
 
           <div className="col-lg-4 d-none d-lg-block">

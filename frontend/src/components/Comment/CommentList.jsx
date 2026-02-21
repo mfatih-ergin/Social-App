@@ -52,6 +52,9 @@ export default function CommentList({
           likesCount: comment.likesCount !== undefined ? comment.likesCount : 0,
           likedByCurrentUser: !!comment.likedByCurrentUser,
 
+          collectionIds: comment.collectionIds || [],
+          isSavedByMe: !!comment.isSavedByMe,
+
           isOwner: currentUserId
             ? comment.user?._id?.toString() === currentUserId.toString() ||
               comment.userId?.toString() === currentUserId.toString()

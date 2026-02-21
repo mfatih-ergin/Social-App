@@ -3,22 +3,17 @@ import CommentButton from "./CommentButton";
 import SaveButton from "./SaveButton";
 import RepostButton from "./RepostButton";
 
-/**
- * @param {Object} props
- * @param {string} props.id - Post veya Comment ID'si
- * @param {string} props.type - "post" veya "comment"
- * @param {number} props.count - Yorum veya Yanıt sayısı
- */
 export default function ContentActions({
   id,
-  type = "post", // Varsayılan "post"
+  type = "post",
   likedByCurrentUser,
   likesCount,
-  count, // commentsCount veya repliesCount yerine tek isim
+  count,
   repostsCount,
   isRepostedByMe,
   isSavedByMe,
-  onActionClick, // onCommentClick veya onReplyClick yerine
+  collectionIds,
+  onActionClick,
   onRepostClick,
   onQuoteClick,
 }) {
@@ -47,7 +42,12 @@ export default function ContentActions({
         />
       </div>
 
-      <SaveButton contentId={id} isSavedInitial={isSavedByMe} type={type} />
+      <SaveButton
+        contentId={id}
+        isSavedInitial={isSavedByMe}
+        type={type}
+        initialCollectionIds={collectionIds}
+      />
     </div>
   );
 }

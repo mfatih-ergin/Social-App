@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getUserPosts } from "../../api/user.api";
 import { getLikedContent } from "../../api/like.api";
 import { getSavedContent } from "../../api/save.api";
+import { getCollections } from "../../api/collection.api";
 import { useTheme } from "../../context/ThemeContext";
 import PostCard from "../Post/PostCard";
 import CommentCard from "../Comment/CommentCard";
@@ -10,17 +11,31 @@ import ProfileSavedCollections from "./ProfileSavedCollections";
 export default function ProfileContent({
   activeTab,
   id,
-  activeCollection,
+  activeCollection = "Tümü",
   setActiveCollection,
 }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [collections, setCollections] = useState(["Tümü"]);
   const { theme } = useTheme();
-
-  const collections = ["Tümü", "Manzaralar", "Yazılım", "Komik"];
   const isDark = theme === "dark";
 
-  const loadData = async () => {
+  const fetchCollections = useCallback(async () => {
+    try {
+      const res = await getCollections();
+      const apiCollections = res.data?.data || [];
+      const newList = ["Tümü", ...apiCollections];
+
+      setCollections((prev) => {
+        if (JSON.stringify(prev) === JSON.stringify(newList)) return prev;
+        return newList;
+      });
+    } catch (err) {
+      console.error("Klasörler yüklenemedi", err);
+    }
+  }, []);
+
+  const loadData = useCallback(async () => {
     if (!id || id === "undefined") return;
 
     setLoading(true);
@@ -31,25 +46,25 @@ export default function ProfileContent({
       } else if (activeTab === "likes") {
         res = await getLikedContent(id);
       } else if (activeTab === "saved") {
-        res = await getSavedContent();
+        res = await getSavedContent(activeCollection);
       }
 
+      const rawData = res?.data || res || [];
+
       if (activeTab === "saved" || activeTab === "likes") {
-        const flattenedData = (res.data || [])
-          .map((item) => {
-            // Eğer doğrudan post/comment geliyorsa (bazı eski API'ler gibi)
-            if (item.isComment !== undefined) return item;
-
-            // Yeni mimari: likeDoc.post veya likeDoc.comment içinden veriyi çıkar
-            if (item.post) return { ...item.post, isComment: false };
-            if (item.comment) return { ...item.comment, isComment: true };
-
-            return item; // Zaten düz ise olduğu gibi bırak
-          })
-          .filter(Boolean);
+        const flattenedData = Array.isArray(rawData)
+          ? rawData
+              .map((item) => {
+                if (item.isComment !== undefined) return item;
+                if (item.post) return { ...item.post, isComment: false };
+                if (item.comment) return { ...item.comment, isComment: true };
+                return item;
+              })
+              .filter(Boolean)
+          : [];
         setData(flattenedData);
       } else {
-        setData(res.data || []);
+        setData(Array.isArray(rawData) ? rawData : []);
       }
     } catch (err) {
       console.error("Content yükleme hatası:", err);
@@ -57,21 +72,26 @@ export default function ProfileContent({
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, activeTab, activeCollection]);
 
   useEffect(() => {
-    if (id) {
-      loadData();
+    if (activeTab === "saved") {
+      fetchCollections();
     }
-  }, [id, activeTab]);
+  }, [activeTab, fetchCollections]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   return (
-    <div className="d-flex flex-column gap-3">
+    <div className="d-flex flex-column">
       {activeTab === "saved" && (
         <ProfileSavedCollections
           activeCollection={activeCollection}
           setActiveCollection={setActiveCollection}
           collections={collections}
+          onRefresh={fetchCollections}
         />
       )}
 
@@ -81,10 +101,11 @@ export default function ProfileContent({
         </div>
       ) : data.length > 0 ? (
         data.map((item) => {
+          const uniqueKey = item._id || Math.random();
           if (item.isComment || item.comment) {
             return (
               <CommentCard
-                key={item._id}
+                key={`comment-${uniqueKey}`}
                 comment={{
                   ...item,
                   userId: item.userId || item.user?._id,
@@ -95,24 +116,26 @@ export default function ProfileContent({
               />
             );
           }
-          return <PostCard key={item._id} post={item} onUpdate={loadData} />;
+          return (
+            <PostCard
+              key={`post-${uniqueKey}`}
+              post={item}
+              onUpdate={loadData}
+            />
+          );
         })
       ) : (
         <div
           className={`text-center py-5 ${isDark ? "text-secondary" : "text-muted"}`}
         >
           <i
-            className={`bi ${
-              activeTab === "posts"
-                ? "bi-chat-square-text"
-                : activeTab === "likes"
-                  ? "bi-heart-break"
-                  : "bi-folder2-open"
-            } fs-1`}
+            className={`bi ${activeTab === "posts" ? "bi-chat-square-text" : activeTab === "likes" ? "bi-heart-break" : "bi-folder2-open"} fs-1`}
           ></i>
           <p className="mt-2">
             {activeTab === "saved"
-              ? `"${activeCollection}" klasörü henüz boş.`
+              ? activeCollection === "Tümü"
+                ? "Henüz bir içerik kaydetmediniz."
+                : `"${activeCollection}" klasörü henüz boş.`
               : "Henüz içerik bulunamadı."}
           </p>
         </div>

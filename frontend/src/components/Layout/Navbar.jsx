@@ -54,6 +54,20 @@ export default function Navbar() {
           </NavLink>
         </li>
 
+        <li>
+          <NavLink
+            to="/bookmarks"
+            className={({ isActive }) =>
+              `nav-link-custom ${isActive ? "active" : ""}`
+            }
+          >
+            <span className="icon-box">
+              <i className="bi bi-bookmark"></i>
+            </span>
+            <span>Yer İşaretleri</span>
+          </NavLink>
+        </li>
+
         {user && (
           <li>
             <button

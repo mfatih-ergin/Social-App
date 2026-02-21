@@ -15,12 +15,31 @@ export default function Explore() {
         <div className="row justify-content-center">
           <div
             className={`col-12 col-md-8 col-lg-6 border-start border-end min-vh-100 p-0 ${
-              isDark ? "border-secondary" : ""
+              isDark ? "border-secondary" : "border-light"
             }`}
           >
-            <div className="px-3 pt-3">
-              <h4 className="fw-bold mb-4">Keşfet</h4>
+            <div
+              className={`d-flex align-items-center px-4 sticky-top ${
+                isDark ? "bg-black bg-opacity-75" : "bg-white bg-opacity-75"
+              }`}
+              style={{
+                backdropFilter: "blur(10px)",
+                zIndex: 1000,
+                height: "75px",
+                borderBottom: isDark
+                  ? "1px solid #2f3336"
+                  : "1px solid #eff3f4",
+              }}
+            >
+              <h5
+                className="mb-0 fw-extrabold fs-4"
+                style={{ letterSpacing: "-0.5px" }}
+              >
+                Keşfet
+              </h5>
+            </div>
 
+            <div className="p-0">
               <ExplorePostList />
             </div>
           </div>

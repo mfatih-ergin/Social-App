@@ -97,3 +97,22 @@
 hr {
   opacity: 0.2;
 }
+
+/* Navbar'ı dışarıdan sarmalayan aside veya div'deki border'ları öldür */
+aside.bg-dark, 
+.sidebar-container {
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Sadece sağda o ince ayırıcı çizgi kalsın istiyorsan bunu ekle: */
+.sidebar-container {
+    border-right: 1px solid #2f3336; /* Koyu tema rengi */
+}
+
+.light-theme {
+    border-right: 1px solid #eff3f4; /* Açık tema rengi */
+}

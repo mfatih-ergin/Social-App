@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   toggleSave,
   getSavedContent,
-} = require("../controllers/saveController");
+} = require("../controllers/save.controller");
 const { protect } = require("../middleware/authMiddleware");
 
 router.post("/toggle/:id", protect, toggleSave);

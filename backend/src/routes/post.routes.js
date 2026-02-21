@@ -7,7 +7,7 @@ const {
   deletePost,
   getPostById,
   repostContent,
-} = require("../controllers/postController");
+} = require("../controllers/post.controller");
 const { protect, optional } = require("../middleware/authMiddleware");
 const upload = require("../middleware/multerMiddleware");
 

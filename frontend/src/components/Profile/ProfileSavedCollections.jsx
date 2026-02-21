@@ -1,28 +1,56 @@
+import React, { useState } from "react";
+import { useTheme } from "../../context/ThemeContext";
+import CollectionButton from "../Component/CollectionButton";
+import CreateCollectionModal from "../Component/CreateCollectionModal";
+
 export default function ProfileSavedCollections({
   activeCollection,
   setActiveCollection,
   collections,
+  onRefresh,
 }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   return (
-    <div className="mb-4">
+    <div
+      className={`border-bottom ${isDark ? "border-secondary border-opacity-25" : "border-light"}`}
+    >
+      <style>
+        {`
+          .no-scrollbar::-webkit-scrollbar { display: none; }
+          .hover-dark:hover { background-color: rgba(255, 255, 255, 0.1) !important; }
+          .hover-light:hover { background-color: rgba(0, 0, 0, 0.05) !important; }
+        `}
+      </style>
+
       <div
-        className="d-flex gap-2 overflow-auto pb-2"
-        style={{ whiteSpace: "nowrap" }}
+        className="d-flex align-items-center gap-2 overflow-auto p-3 no-scrollbar"
+        style={{ scrollbarWidth: "none" }}
       >
         {collections.map((col) => (
-          <button
-            key={col}
-            onClick={() => setActiveCollection(col)}
-            className={`btn btn-sm rounded-pill px-3 ${activeCollection === col ? "btn-dark" : "btn-outline-secondary"}`}
-          >
-            {col}
-          </button>
+          <CollectionButton
+            key={col._id || col}
+            label={col.name || col}
+            isActive={activeCollection === (col.name || col)}
+            onClick={() => setActiveCollection(col.name || col)}
+          />
         ))}
-        <button className="btn btn-sm btn-outline-primary rounded-pill px-3">
-          <i className="bi bi-plus-lg"></i> Yeni Klasör
-        </button>
+
+        <CollectionButton
+          label="Yeni Klasör"
+          isSpecial={true}
+          icon="bi-plus-lg"
+          onClick={() => setIsModalOpen(true)}
+        />
       </div>
-      <hr className="mt-2 opacity-25" />
+
+      <CreateCollectionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={onRefresh}
+      />
     </div>
   );
 }

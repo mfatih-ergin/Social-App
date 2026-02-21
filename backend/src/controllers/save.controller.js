@@ -1,15 +1,14 @@
 const Save = require("../models/Save");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
-const Like = require("../models/Like"); // Yeni Beğeni modelini ekledik
+const Like = require("../models/Like");
+const Collection = require("../models/Collection");
+const mongoose = require("mongoose");
 
-/**
- * İçeriği kaydet veya kaydı kaldır
- */
 const toggleSave = async (req, res) => {
   try {
     const { id } = req.params;
-    const { type } = req.body;
+    const { type, collectionIds } = req.body;
     const userId = req.user._id || req.user.id;
 
     const query = { user: userId };
@@ -19,37 +18,79 @@ const toggleSave = async (req, res) => {
       query.post = id;
     }
 
-    const existingSave = await Save.findOne(query);
+    let existingSave = await Save.findOne(query);
+
+    if (!collectionIds || collectionIds.length === 0) {
+      if (existingSave) {
+        await Save.findByIdAndDelete(existingSave._id);
+      }
+      return res.status(200).json({ saved: false, message: "Kaldırıldı" });
+    }
+
+    const finalIds = collectionIds
+      .map((cid) => {
+        if (cid === null || cid === "null") return null;
+        if (mongoose.Types.ObjectId.isValid(cid)) {
+          return new mongoose.Types.ObjectId(cid);
+        }
+        return null;
+      })
+      .filter((val, index, self) => self.indexOf(val) === index);
 
     if (existingSave) {
-      await Save.findByIdAndDelete(existingSave._id);
+      existingSave.collectionIds = finalIds;
+      existingSave.markModified("collectionIds");
+      await existingSave.save();
+
       return res.status(200).json({
-        saved: false,
-        message: "Kaydedilenlerden kaldırıldı",
+        saved: true,
+        data: existingSave,
+        message: "Güncellendi",
       });
     } else {
-      const newSave = new Save({
+      const newSave = await Save.create({
         user: userId,
         post: type === "post" ? id : null,
         comment: type === "comment" ? id : null,
+        collectionIds: finalIds,
       });
-      await newSave.save();
+
       return res.status(201).json({
         saved: true,
+        data: newSave,
         message: "Kaydedildi",
       });
     }
   } catch (error) {
-    console.error("Save Toggle Hatası:", error);
-    res.status(500).json({ message: "İşlem başarısız" });
+    console.error("SAVE ERROR:", error);
+    res.status(500).json({ message: "Hata oluştu" });
   }
 };
 
 const getSavedContent = async (req, res) => {
   try {
     const userId = req.user._id.toString();
+    const { collectionName } = req.query;
 
-    // 1. Kontrol Set'lerini Hazırla (Like ve Repost durumları için)
+    let saveQuery = { user: userId };
+
+    if (collectionName) {
+      if (collectionName === "Tümü") {
+        saveQuery.collectionIds = { $in: [null] };
+      } else {
+        const folder = await Collection.findOne({
+          user: userId,
+          name: collectionName.trim(),
+        });
+
+        if (folder) {
+          saveQuery.collectionIds = { $in: [folder._id] };
+        } else {
+          return res.json([]);
+        }
+      }
+    }
+
     let myLikedIds = new Set();
     let repostedPostIds = new Set();
     let repostedCommentIds = new Set();
@@ -73,8 +114,7 @@ const getSavedContent = async (req, res) => {
       if (rp.parentComment) repostedCommentIds.add(rp.parentComment.toString());
     });
 
-    // 2. Kaydedilen İçerikleri Getir
-    const savedContent = await Save.find({ user: userId })
+    const savedContent = await Save.find(saveQuery)
       .sort({ createdAt: -1 })
       .populate({
         path: "post",
@@ -96,19 +136,15 @@ const getSavedContent = async (req, res) => {
       })
       .lean();
 
-    // 3. Verileri Formatla
     const formattedContent = savedContent
       .map((saveDoc) => {
         const isComment = !!saveDoc.comment;
         const item = isComment ? saveDoc.comment : saveDoc.post;
-
-        if (!item) return null; // Silinmiş içerik kontrolü
+        if (!item) return null;
 
         const itemIdStr = item._id.toString();
         const parent = item.parentPost || item.parentComment;
         const originalId = parent ? parent._id.toString() : itemIdStr;
-
-        // Alıntı (Quote) Kontrolü
         const isQuote =
           item.isRepost && item.text && item.text.trim().length > 0;
 
@@ -118,27 +154,21 @@ const getSavedContent = async (req, res) => {
           userId: item.user?._id,
           username: item.user?.username,
           profileImage: item.user?.profileImage,
-
-          // BEĞENİ DURUMU (Senkronize)
           likesCount: item.likesCount || 0,
           likedByCurrentUser: isQuote
             ? myLikedIds.has(itemIdStr)
             : myLikedIds.has(itemIdStr) || myLikedIds.has(originalId),
-
-          // KAYDETME DURUMU (Zaten kaydedilenlerdeyiz, o yüzden true)
-          isSavedByMe: true,
-
-          // REPOST DURUMU (KRİTİK EKSİK BURASIYDI)
+          isSavedByMe:
+            saveDoc.collectionIds && saveDoc.collectionIds.length > 0,
+          collectionIds: saveDoc.collectionIds || [],
           isRepostedByMe: item.parentComment
             ? repostedCommentIds.has(originalId)
             : repostedPostIds.has(originalId),
-
           image: item.image
             ? item.image.startsWith("http")
               ? item.image
               : `http://localhost:5000${item.image}`
             : null,
-
           isOwner: item.user?._id?.toString() === userId,
         };
       })

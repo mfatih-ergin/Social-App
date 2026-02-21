@@ -1,6 +1,11 @@
 import api from "./axios";
 
-export const toggleSaveApi = (id, type = "post") =>
-  api.post(`/saves/toggle/${id}`, { type });
+export const toggleSaveApi = (id, type = "post", collectionIds = []) =>
+  api.post(`/saves/toggle/${id}`, { type, collectionIds });
 
-export const getSavedContent = () => api.get("/saves");
+export const getSavedContent = (collectionName = "Tümü") => {
+  const query = collectionName
+    ? `collectionName=${encodeURIComponent(collectionName)}`
+    : "";
+  return api.get(`/saves?${query}&t=${new Date().getTime()}`);
+};

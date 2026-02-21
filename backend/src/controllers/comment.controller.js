@@ -1,9 +1,49 @@
 const Comment = require("../models/Comment");
 const Post = require("../models/Post");
 const Like = require("../models/Like");
+const User = require("../models/User");
+const Save = require("../models/Save");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
+
+const formatCommentData = (
+  comment,
+  userId,
+  likedCommentIds,
+  repostedCommentIds,
+  followingList,
+  userSavesMap,
+) => {
+  const cIdStr = comment._id.toString();
+  const commentAuthorId = comment.user?._id?.toString();
+
+  const isFollowingByMe =
+    userId && commentAuthorId && userId !== commentAuthorId
+      ? followingList.some((id) => id.toString() === commentAuthorId)
+      : false;
+
+  const savedData = userSavesMap.get(cIdStr);
+
+  return {
+    ...comment,
+    isComment: true,
+    userId: comment.user?._id,
+    username: comment.user?.username,
+    profileImage: comment.user?.profileImage,
+    likedByCurrentUser: likedCommentIds.has(cIdStr),
+    isRepostedByMe: repostedCommentIds.has(cIdStr),
+    isFollowingByMe: isFollowingByMe,
+    isSavedByMe: !!savedData,
+    collectionIds: savedData || [],
+    isOwner: userId ? commentAuthorId === userId : false,
+    image: comment.image
+      ? comment.image.startsWith("http")
+        ? comment.image
+        : `http://localhost:5000${comment.image}`
+      : null,
+  };
+};
 
 const addComment = async (req, res) => {
   try {
@@ -42,6 +82,21 @@ const getComments = async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.user ? req.user._id.toString() : null;
+    const userSavesMap = new Map();
+    let followingList = [];
+
+    if (userId) {
+      const currentUser = await User.findById(userId)
+        .select("following")
+        .lean();
+      followingList = currentUser?.following || [];
+
+      const userSaves = await Save.find({ user: userId }).lean();
+      userSaves.forEach((s) => {
+        const key = (s.post || s.comment)?.toString();
+        if (key) userSavesMap.set(key, s.collectionIds || [null]);
+      });
+    }
 
     const comments = await Comment.find({ post: postId, parentComment: null })
       .populate("user", "username profileImage")
@@ -68,24 +123,16 @@ const getComments = async (req, res) => {
       );
     }
 
-    const formattedComments = comments.map((comment) => {
-      const cIdStr = comment._id.toString();
-      return {
-        ...comment,
-        isComment: true,
-        userId: comment.user?._id,
-        username: comment.user?.username,
-        profileImage: comment.user?.profileImage,
-        likedByCurrentUser: likedCommentIds.has(cIdStr),
-        isRepostedByMe: repostedCommentIds.has(cIdStr),
-        isOwner: userId ? comment.user?._id?.toString() === userId : false,
-        image: comment.image
-          ? comment.image.startsWith("http")
-            ? comment.image
-            : `http://localhost:5000${comment.image}`
-          : null,
-      };
-    });
+    const formattedComments = comments.map((comment) =>
+      formatCommentData(
+        comment,
+        userId,
+        likedCommentIds,
+        repostedCommentIds,
+        followingList,
+        userSavesMap,
+      ),
+    );
 
     res.json(formattedComments);
   } catch (error) {
@@ -107,40 +154,60 @@ const getCommentById = async (req, res) => {
 
     const commentObj = comment.toObject();
     const cIdStr = commentObj._id.toString();
+    const userSavesMap = new Map();
+    let followingList = [];
 
-    let isRepostedByMe = false;
     if (userId) {
-      const repostExists = await Post.findOne({
-        user: new mongoose.Types.ObjectId(userId),
-        isRepost: true,
-        parentComment: new mongoose.Types.ObjectId(cIdStr),
-        $or: [{ text: "" }, { text: null }, { text: { $exists: false } }],
+      const [me, userSaves] = await Promise.all([
+        User.findById(userId).select("following").lean(),
+        Save.find({ user: userId }).lean(),
+      ]);
+
+      followingList = me?.following || [];
+      userSaves.forEach((s) => {
+        const key = (s.post || s.comment)?.toString();
+        if (key) userSavesMap.set(key, s.collectionIds || [null]);
       });
-      isRepostedByMe = !!repostExists;
     }
 
+    let isRepostedByMe = false;
     let likedByCurrentUser = false;
+
     if (userId) {
-      const likeExists = await Like.findOne({
-        user: userId,
-        comment: cIdStr,
-      });
+      const [repostExists, likeExists] = await Promise.all([
+        Post.findOne({
+          user: userId,
+          isRepost: true,
+          parentComment: cIdStr,
+          $or: [{ text: "" }, { text: null }, { text: { $exists: false } }],
+        }),
+        Like.findOne({ user: userId, comment: cIdStr }),
+      ]);
+      isRepostedByMe = !!repostExists;
       likedByCurrentUser = !!likeExists;
     }
 
+    const savedData = userSavesMap.get(cIdStr);
+
     res.json({
       ...commentObj,
-
       isComment: true,
       userId: commentObj.user?._id,
       username: commentObj.user?.username,
       profileImage: commentObj.user?.profileImage,
-
-      likedByCurrentUser: likedByCurrentUser,
-      likesCount: commentObj.likesCount || 0,
-      isRepostedByMe: isRepostedByMe,
+      likedByCurrentUser,
+      isRepostedByMe,
+      isFollowingByMe:
+        userId &&
+        commentObj.user?._id &&
+        userId !== commentObj.user._id.toString()
+          ? followingList.some(
+              (id) => id.toString() === commentObj.user._id.toString(),
+            )
+          : false,
+      isSavedByMe: !!savedData,
+      collectionIds: savedData || [],
       isOwner: userId ? commentObj.user?._id?.toString() === userId : false,
-
       image: commentObj.image
         ? commentObj.image.startsWith("http")
           ? commentObj.image
@@ -156,6 +223,21 @@ const getCommentById = async (req, res) => {
 const getReplies = async (req, res) => {
   try {
     const userId = req.user ? (req.user._id || req.user.id).toString() : null;
+    const userSavesMap = new Map();
+    let followingList = [];
+
+    if (userId) {
+      const [currentUser, userSaves] = await Promise.all([
+        User.findById(userId).select("following").lean(),
+        Save.find({ user: userId }).lean(),
+      ]);
+
+      followingList = currentUser?.following || [];
+      userSaves.forEach((s) => {
+        const key = (s.post || s.comment)?.toString();
+        if (key) userSavesMap.set(key, s.collectionIds || [null]);
+      });
+    }
 
     const replies = await Comment.find({ parentComment: req.params.id })
       .populate("user", "username profileImage")
@@ -182,31 +264,16 @@ const getReplies = async (req, res) => {
       );
     }
 
-    const formattedReplies = replies.map((reply) => {
-      const rIdStr = reply._id.toString();
-
-      return {
-        ...reply,
-        isComment: true,
-        isOwner: userId ? reply.user?._id?.toString() === userId : false,
-
-        likedByCurrentUser: likedCommentIds.has(rIdStr),
-        isRepostedByMe: repostedCommentIds.has(rIdStr),
-
-        likesCount: reply.likesCount || 0,
-        repliesCount: reply.repliesCount || 0,
-
-        image: reply.image
-          ? reply.image.startsWith("http")
-            ? reply.image
-            : `http://localhost:5000${reply.image}`
-          : null,
-
-        username: reply.user?.username || "Kullanıcı",
-        profileImage: reply.user?.profileImage,
-        userId: reply.user?._id,
-      };
-    });
+    const formattedReplies = replies.map((reply) =>
+      formatCommentData(
+        reply,
+        userId,
+        likedCommentIds,
+        repostedCommentIds,
+        followingList,
+        userSavesMap,
+      ),
+    );
 
     res.json(formattedReplies);
   } catch (error) {
@@ -248,7 +315,10 @@ const deleteComment = async (req, res) => {
 
     await Comment.findByIdAndDelete(id);
 
-    await Like.deleteMany({ comment: id });
+    await Promise.all([
+      Like.deleteMany({ comment: id }),
+      Save.deleteMany({ comment: id }),
+    ]);
 
     if (postId) {
       await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: -1 } });

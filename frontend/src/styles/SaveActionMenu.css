@@ -1,0 +1,130 @@
+/* Bottom Sheet Overlay */
+.save-menu-overlay {
+  position: fixed;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+  cursor: default !important; 
+}
+
+/* Sheet Container */
+.save-menu-sheet {
+  width: 100% !important;
+  max-width: 500px !important;
+  padding: 1.5rem !important;
+  padding-bottom: 2.5rem !important;
+  border-top-left-radius: 28px !important;
+  border-top-right-radius: 28px !important;
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3) !important;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default !important; 
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Header Buttons */
+.save-menu-header .btn-action {
+  border: none !important;
+  background: transparent !important;
+  font-weight: 600 !important; /* Standart kalınlık */
+  padding: 0.5rem !important;
+  font-size: 0.95rem !important;
+  cursor: pointer !important; 
+  transition: color 0.2s ease-in-out !important;
+}
+
+.save-menu-header .btn-action:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+/* --- TEMA ÖZEL BUTON RENKLERİ --- */
+
+/* Light Tema */
+.light .save-menu-header .btn-action.text-secondary:hover { color: #333333 !important; }
+.light .save-menu-header .btn-action.text-primary:hover { color: #004dc0 !important; }
+
+/* Dark Tema */
+.dark .save-menu-header .btn-action.text-secondary:hover { color: #ffffff !important; }
+.dark .save-menu-header .btn-action.text-primary:hover { color: #4da3ff !important; }
+
+/* List Styling */
+.save-menu-list {
+  max-height: 250px !important;
+  overflow-y: auto !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 0.5rem;
+}
+
+.save-menu-list::-webkit-scrollbar { display: none; }
+
+.save-menu-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 1rem 1rem !important;
+  margin-bottom: 0.3rem !important;
+  border-radius: 14px !important;
+  cursor: pointer !important; 
+  transition: background-color 0.2s ease !important;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.save-menu-item:hover { transform: none !important; }
+
+.save-menu-item .folder-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  font-weight: 500 !important;
+}
+
+.save-menu-item i.bi-check-circle-fill {
+  color: #0d6efd !important;
+  margin-left: auto !important;
+}
+
+/* --- YÜKLEME ANİMASYONU --- */
+.save-menu-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 0;
+}
+
+.save-menu-spinner {
+  width: 35px;
+  height: 35px;
+  border: 3px solid rgba(13, 110, 253, 0.1);
+  border-top: 3px solid #0d6efd;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* --- TEMALAR --- */
+.save-menu-sheet.light { background-color: #ffffff !important; color: #000000 !important; }
+.save-menu-item.light:hover { background-color: rgba(0, 0, 0, 0.05) !important; }
+
+.save-menu-sheet.dark { background-color: #121212 !important; color: #ffffff !important; }
+.save-menu-item.dark:hover { background-color: rgba(255, 255, 255, 0.08) !important; }

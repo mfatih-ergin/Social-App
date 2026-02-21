@@ -7,7 +7,7 @@ const {
   unfollowUser,
   updateSettings,
   deleteUser,
-} = require("../controllers/userController");
+} = require("../controllers/user.controller");
 const { protect } = require("../middleware/authMiddleware");
 
 router.get("/:id", protect, getUserProfile);

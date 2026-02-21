@@ -6,7 +6,7 @@ const {
   deleteComment,
   getCommentById,
   getReplies,
-} = require("../controllers/commentController");
+} = require("../controllers/comment.controller");
 const { protect, optional } = require("../middleware/authMiddleware");
 const upload = require("../middleware/multerMiddleware");
 

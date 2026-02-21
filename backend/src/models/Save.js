@@ -18,8 +18,17 @@ const saveSchema = new mongoose.Schema(
       ref: "Comment",
       default: null,
     },
+    collectionIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Collection",
+      },
+    ],
   },
   { timestamps: true },
 );
+
+saveSchema.index({ user: 1, post: 1 }, { sparse: true });
+saveSchema.index({ user: 1, comment: 1 }, { sparse: true });
 
 module.exports = mongoose.model("Save", saveSchema);

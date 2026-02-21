@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const Post = require("../models/Post");
 const Save = require("../models/Save");
-const Like = require("../models/Like"); // MUTLAKA EKLE!
+const Like = require("../models/Like");
 
 const getUserProfile = async (req, res) => {
   try {
@@ -76,12 +76,10 @@ const getUserPosts = async (req, res) => {
     const formattedPosts = posts.map((post) => {
       const pIdStr = post._id.toString();
 
-      // Alıntı mı yoksa düz repost mu?
       const isQuote = post.isRepost && post.text && post.text.trim().length > 0;
       const parent = post.parentPost || post.parentComment;
       const originalContentId = parent ? parent._id.toString() : pIdStr;
 
-      // 1. Parent (İçerideki kutu) Formatlama
       let formattedParent = null;
       if (parent) {
         const parentId = parent._id.toString();
@@ -114,14 +112,12 @@ const getUserPosts = async (req, res) => {
         username: post.user?.username,
         profileImage: post.user?.profileImage,
 
-        // BEĞENİ VE KAYDETME
         likesCount: post.likesCount || 0,
         likedByCurrentUser: isLiked,
         isSavedByMe: isQuote
           ? savedPostIds.has(pIdStr)
           : savedPostIds.has(pIdStr) || savedPostIds.has(originalContentId),
 
-        // REPOST DURUMU
         isRepostedByMe: post.parentComment
           ? repostedCommentIds.has(originalContentId)
           : repostedPostIds.has(originalContentId),

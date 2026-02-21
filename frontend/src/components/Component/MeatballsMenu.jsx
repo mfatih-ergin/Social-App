@@ -1,11 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 import "../../styles/MeatballsMenu.css";
 
-export default function MeatballsMenu({ isOwner, onDelete }) {
+export default function MeatballsMenu({
+  isOwner,
+  onDelete,
+  targetUser,
+  onFollowToggle,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const { theme } = useTheme();
+  const { user } = useAuth();
   const isDark = theme === "dark";
 
   useEffect(() => {
@@ -36,10 +43,11 @@ export default function MeatballsMenu({ isOwner, onDelete }) {
           isDark ? "dropdown-dark" : ""
         } ${isOpen ? "show" : ""}`}
         style={{
-          minWidth: "180px",
+          minWidth: "220px",
           display: isOpen ? "block" : "none",
           position: "absolute",
           right: 0,
+          zIndex: 1100,
         }}
       >
         {isOwner ? (
@@ -59,11 +67,34 @@ export default function MeatballsMenu({ isOwner, onDelete }) {
         ) : (
           <li>
             <button
-              className={`dropdown-item d-flex align-items-center py-2 px-3 ${isDark ? "text-white" : "text-secondary"}`}
+              className={`dropdown-item d-flex align-items-center py-2 px-3 ${
+                targetUser?.isFollowing
+                  ? "text-danger"
+                  : isDark
+                    ? "text-white"
+                    : "text-dark"
+              }`}
               type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!user) {
+                  alert("Bu işlem için giriş yapmalısınız!");
+                  return;
+                }
+                onFollowToggle(targetUser?._id, targetUser?.isFollowing);
+                setIsOpen(false);
+              }}
             >
-              <i className="bi bi-slash-circle me-3"></i>
-              Boş
+              <i
+                className={`bi ${
+                  targetUser?.isFollowing ? "bi-person-x" : "bi-person-plus"
+                } me-3`}
+              ></i>
+              <span>
+                {targetUser?.isFollowing
+                  ? `@${targetUser?.username} Takipten Çık`
+                  : `@${targetUser?.username} Takip Et`}
+              </span>
             </button>
           </li>
         )}

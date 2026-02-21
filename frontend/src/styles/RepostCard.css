@@ -2,21 +2,33 @@
 
 .repost-container-wrapper {
   margin-top: 10px;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
   width: 100%;
 }
 
-.repost-container-wrapper .card-layout {
-  border: 1px solid #eff3f4 !important; 
-  border-radius: 12px !important;
-  margin-bottom: 0;
+/* CardLayout'un alt çizgi kuralını ezip tam kutu yapıyoruz */
+.repost-container-wrapper .card-layout, 
+.mini-quote-card {
+  border: 1px solid #cfd9de !important; /* Dört taraflı border */
+  border-radius: 12px !important;       /* Oval köşeler */
+  margin-bottom: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
-.dark .repost-container-wrapper .card-layout {
-  border: 1px solid #2f3336 !important;
-  background-color: transparent;
+/* Alıntının içindeki padding'i biraz daraltalım (Daha profesyonel durur) */
+.mini-quote-card .card-layout-body {
+  padding: 8px 12px !important;
 }
 
+/* KOYU TEMA AYARI */
+.dark .repost-container-wrapper .card-layout,
+.dark .mini-quote-card {
+  border: 1px solid #3d4144 !important;
+  background-color: transparent !important;
+}
+
+/* İÇERİK DÜZENİ */
 .repost-content .content-text {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -27,24 +39,30 @@
   font-size: 0.9rem;
   word-break: break-word;
   white-space: pre-wrap;
-  margin-bottom: 8px;
+  margin: 8px 0;
 }
 
+/* RESİM AYARLARI */
 .repost-content .post-media-wrapper {
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-top: 5px;
 }
 
 .repost-content .post-image {
   width: 100%;
-  max-height: 300px;
+  max-height: 250px;
   object-fit: cover;
 }
 
+/* HOVER DURUMU */
 .repost-container-wrapper:hover .card-layout {
+  border-color: #bcc9d2 !important;
   background-color: rgba(0, 0, 0, 0.02) !important;
 }
 
 .dark .repost-container-wrapper:hover .card-layout {
+  border-color: #53585c !important;
   background-color: rgba(255, 255, 255, 0.03) !important;
 }
