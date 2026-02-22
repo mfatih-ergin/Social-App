@@ -22,21 +22,32 @@ export default function ProfilePage() {
   const [activeCollection, setActiveCollection] = useState("Tümü");
 
   const isDark = theme === "dark";
-  const isOwnProfile = currentUser?._id === id || currentUser?.id === id;
+  const isOwnProfile =
+    currentUser && (currentUser._id === id || currentUser.id === id);
 
-  const fetchProfile = async () => {
+  useEffect(() => {
+    if (profile?.username) {
+      document.title = `${profile.username} / ${import.meta.env.VITE_APP_NAME}`;
+    } else {
+      document.title = `Profil / ${import.meta.env.VITE_APP_NAME}`;
+    }
+  }, [profile]);
+
+  const fetchProfile = async (silent = false) => {
     if (!id || id === "undefined") return;
 
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+
       const res = await getUserProfile(id);
       setProfile(res.data);
       setError(null);
     } catch (err) {
       console.error("Profil çekme hatası:", err);
-      setError(err.response?.data?.message || "Kullanıcı bulunamadı.");
+      if (!silent)
+        setError(err.response?.data?.message || "Kullanıcı bulunamadı.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -108,6 +119,7 @@ export default function ProfilePage() {
               )}
               handleFollowToggle={handleFollowToggle}
               btnLoading={btnLoading}
+              onUpdate={() => fetchProfile(true)}
             />
 
             <ProfileTabs

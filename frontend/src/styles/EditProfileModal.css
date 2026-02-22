@@ -1,0 +1,53 @@
+/* Seçiciler arasındaki boşluğu kaldırdık: .edit-profile-modal[data-theme='...'] */
+
+.edit-profile-modal[data-theme='light'] {
+  --modal-bg: #ffffff;
+  --modal-text: #0f1419;
+  --modal-border: #eff3f4;
+  --input-bg: #ffffff;
+  --input-border: #cfd9de;
+  --text-muted: #536471;
+}
+
+.edit-profile-modal[data-theme='dark'] {
+  --modal-bg: #000000;
+  --modal-text: #eff3f4;
+  --modal-border: #333639;
+  --input-bg: #000000;
+  --input-border: #333639;
+  --text-muted: #71767b;
+}
+
+/* Modal İçerik Uygulaması */
+.edit-profile-modal .modal-content {
+  background-color: var(--modal-bg) !important;
+  color: var(--modal-text) !important;
+  border: 1px solid var(--modal-border) !important;
+  opacity: 1 !important; /* Şeffaflık varsa ezer */
+}
+
+.edit-profile-modal .form-control {
+  background-color: var(--input-bg) !important;
+  color: var(--modal-text) !important;
+  border: 1px solid var(--input-border) !important;
+}
+
+.edit-profile-modal .form-control:focus {
+  border-color: #1d9bf0 !important;
+  box-shadow: none !important;
+}
+
+.edit-profile-modal .text-secondary {
+  color: var(--text-muted) !important;
+}
+
+/* Kapatma butonu ikonu rengi için ekle */
+.edit-profile-modal .btn i {
+  color: var(--modal-text) !important;
+}
+
+body.modal-open {
+  overflow: hidden !important;
+  /* Bazı tarayıcılarda scroll bar kaybolunca sayfa zıplamasın diye: */
+  padding-right: var(--scrollbar-width, 0px); 
+}

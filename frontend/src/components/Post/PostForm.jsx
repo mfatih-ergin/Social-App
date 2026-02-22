@@ -56,7 +56,7 @@ export default function PostForm({ onPostCreated }) {
     >
       <div className="d-flex">
         <div className="me-3">
-          <Avatar userId={user?._id || user?.id} profileImage={user?.avatar} />
+          <Avatar userId={user?._id} profileImage={user?.profileImage} />
         </div>
 
         <div className="w-100 mt-1">

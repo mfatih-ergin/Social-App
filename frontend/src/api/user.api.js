@@ -2,6 +2,13 @@ import api from "./axios";
 
 export const getUserProfile = (userId) => api.get(`/users/${userId}`);
 
+export const updateProfile = (formData) =>
+  api.put("/users/settings/profile", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
 export const followUser = (id) => api.put(`/users/${id}/follow`);
 
 export const unfollowUser = (id) => api.put(`/users/${id}/unfollow`);

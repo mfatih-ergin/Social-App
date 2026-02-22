@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updateUserSettings, deleteUserAccount } from "../api/user.api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -11,6 +11,10 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("appearance");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = `Ayarlar / ${import.meta.env.VITE_APP_NAME}`;
+  }, []);
 
   const changeTheme = async (newTheme) => {
     if (loading || theme === newTheme) return;
@@ -26,7 +30,6 @@ export default function Settings() {
     }
   };
 
-  // HESAP SİLME İŞLEMİ
   const handleDeleteAccount = async () => {
     const confirmDelete = window.confirm(
       "Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm verileriniz kaybolur.",
@@ -59,7 +62,6 @@ export default function Settings() {
     >
       <div className="container py-5">
         <div className="row g-4">
-          {/* SOL TARAF: Navigasyon Menüsü */}
           <div className="col-md-4 col-lg-4">
             <div
               className={`card border-0 shadow-sm rounded-4 sticky-top ${
@@ -101,14 +103,12 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* SAĞ TARAF: İçerik Alanı */}
           <div className="col-md-8 col-lg-8">
             <div
               className={`card border-0 shadow-sm rounded-4 p-4 p-md-5 ${
                 theme === "dark" ? "bg-dark text-white" : "bg-white"
               }`}
             >
-              {/* GÖRÜNÜM SEKMESİ */}
               {activeTab === "appearance" && (
                 <div className="animate-fade-in">
                   <h3 className="fw-bold mb-1">Görünüm</h3>
@@ -152,7 +152,6 @@ export default function Settings() {
                 </div>
               )}
 
-              {/* HESAP AYARLARI SEKMESİ */}
               {activeTab === "account" && (
                 <div className="animate-fade-in">
                   <h3 className="fw-bold mb-1">Hesap Ayarları</h3>

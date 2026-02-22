@@ -47,7 +47,7 @@ export default function MeatballsMenu({
           display: isOpen ? "block" : "none",
           position: "absolute",
           right: 0,
-          zIndex: 1100,
+          zIndex: 1000,
         }}
       >
         {isOwner ? (

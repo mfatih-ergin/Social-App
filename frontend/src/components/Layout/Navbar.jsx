@@ -20,7 +20,7 @@ export default function Navbar() {
         to="/"
         className="navbar-brand text-decoration-none fs-4 px-2 mb-2 fw-bold"
       >
-        Social App
+        {import.meta.env.VITE_APP_NAME}
       </Link>
 
       <hr />
@@ -54,19 +54,21 @@ export default function Navbar() {
           </NavLink>
         </li>
 
-        <li>
-          <NavLink
-            to="/bookmarks"
-            className={({ isActive }) =>
-              `nav-link-custom ${isActive ? "active" : ""}`
-            }
-          >
-            <span className="icon-box">
-              <i className="bi bi-bookmark"></i>
-            </span>
-            <span>Yer İşaretleri</span>
-          </NavLink>
-        </li>
+        {user && (
+          <li>
+            <NavLink
+              to="/bookmarks"
+              className={({ isActive }) =>
+                `nav-link-custom ${isActive ? "active" : ""}`
+              }
+            >
+              <span className="icon-box">
+                <i className="bi bi-bookmark"></i>
+              </span>
+              <span>Yer İşaretleri</span>
+            </NavLink>
+          </li>
+        )}
 
         {user && (
           <li>
@@ -90,18 +92,22 @@ export default function Navbar() {
             size="32px"
           />
 
-          <Link
-            to={user ? `/profile/${user._id}` : "/login"}
-            className="text-decoration-none"
-            style={{ color: "inherit" }}
+          <div
+            className="ms-2 text-truncate d-block"
+            style={{ maxWidth: "120px" }}
           >
-            <strong
-              className="ms-2 text-truncate d-block"
-              style={{ maxWidth: "120px" }}
-            >
-              {user?.username || "Misafir"}
-            </strong>
-          </Link>
+            {user ? (
+              <Link
+                to={`/profile/${user._id}`}
+                className="text-decoration-none fw-bold"
+                style={{ color: "inherit" }}
+              >
+                {user.username}
+              </Link>
+            ) : (
+              <span className="fw-medium">Misafir</span>
+            )}
+          </div>
         </div>
 
         <div className="dropdown">

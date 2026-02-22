@@ -20,12 +20,12 @@ export default function AppRouter() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/home" element={<Home />} />
-
       <Route path="/post/:contentId" element={<ThreadPage type="post" />} />
       <Route
         path="/comment/:contentId"
         element={<ThreadPage type="comment" />}
       />
+      <Route path="/profile/:id" element={<ProfilePage />} />
 
       <Route
         path="/bookmarks"
@@ -40,14 +40,6 @@ export default function AppRouter() {
         element={
           <PrivateRoute>
             <Settings />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/profile/:id"
-        element={
-          <PrivateRoute>
-            <ProfilePage />
           </PrivateRoute>
         }
       />

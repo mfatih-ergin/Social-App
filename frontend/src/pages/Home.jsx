@@ -33,6 +33,10 @@ export default function Home() {
     fetchPosts();
   }, [user]);
 
+  useEffect(() => {
+    document.title = `Ana Sayfa / ${import.meta.env.VITE_APP_NAME}`;
+  }, []);
+
   if (!user) {
     return (
       <div className="alert alert-warning text-center shadow-sm m-4">

@@ -12,7 +12,7 @@ export default function BookmarksPage() {
   const [activeCollection, setActiveCollection] = useState("Tümü");
 
   useEffect(() => {
-    document.title = "Kaydedilenler / Social App";
+    document.title = `Kaydedilenler / ${import.meta.env.VITE_APP_NAME}`;
   }, []);
 
   return (

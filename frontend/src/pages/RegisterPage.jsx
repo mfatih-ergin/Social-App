@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -10,6 +10,10 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    document.title = `Kayıt Ol / ${import.meta.env.VITE_APP_NAME}`;
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -225,11 +225,7 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
             collectionIds={
               displayData.collectionIds || post.collectionIds || []
             }
-            isRepostedByMe={
-              isDirectRepost
-                ? true
-                : displayData.isRepostedByMe || post.isRepostedByMe
-            }
+            isRepostedByMe={displayData.isRepostedByMe || post.isRepostedByMe}
             onActionClick={handleCommentClick}
             onRepostClick={handleDirectRepost}
             onQuoteClick={handleQuoteClick}

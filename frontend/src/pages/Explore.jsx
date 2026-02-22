@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
 import ExplorePostList from "../components/Post/ExplorePostList";
 import RightAside from "../components/Layout/RightAside";
@@ -5,6 +6,10 @@ import RightAside from "../components/Layout/RightAside";
 export default function Explore() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  useEffect(() => {
+    document.title = `Keşfet / ${import.meta.env.VITE_APP_NAME}`;
+  }, []);
 
   return (
     <div
@@ -24,7 +29,7 @@ export default function Explore() {
               }`}
               style={{
                 backdropFilter: "blur(10px)",
-                zIndex: 1000,
+                zIndex: 1050,
                 height: "75px",
                 borderBottom: isDark
                   ? "1px solid #2f3336"

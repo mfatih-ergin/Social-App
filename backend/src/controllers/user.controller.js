@@ -2,21 +2,115 @@ const User = require("../models/User");
 const Post = require("../models/Post");
 const Save = require("../models/Save");
 const Like = require("../models/Like");
+const path = require("path");
+const fs = require("fs");
 
 const getUserProfile = async (req, res) => {
   try {
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+
     const user = await User.findById(req.params.id)
       .select("-password")
       .populate("followers", "username profileImage")
-      .populate("following", "username profileImage");
+      .populate("following", "username profileImage")
+      .lean();
 
     if (!user) {
       return res.status(404).json({ message: "Kullanıcı bulunamadı" });
     }
 
+    const formatImageUrl = (url) => {
+      if (!url) return "";
+      if (url.startsWith("http")) return url;
+      return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
+    };
+
+    user.profileImage = formatImageUrl(user.profileImage);
+    user.banner = formatImageUrl(user.banner);
+
+    if (user.followers) {
+      user.followers = user.followers.map((f) => ({
+        ...f,
+        profileImage: formatImageUrl(f.profileImage),
+      }));
+    }
+
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("getUserProfile Hatası:", error);
+    res
+      .status(500)
+      .json({ message: "Profil bilgileri getirilirken hata oluştu." });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { username, bio, birthday } = req.body;
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+
+    let updateFields = { username, bio, birthday };
+
+    const cleanupOldFile = (oldUrl, newFileName) => {
+      if (oldUrl && oldUrl.includes("/uploads/")) {
+        const oldFileNameWithQuery = oldUrl.split("/").pop();
+        const oldFileName = oldFileNameWithQuery.split("?")[0];
+
+        if (oldFileName !== newFileName) {
+          const filePath = path.join(__dirname, "../../uploads", oldFileName);
+          if (fs.existsSync(filePath)) {
+            try {
+              fs.unlinkSync(filePath);
+            } catch (err) {
+              console.error("Eski dosya silinirken hata:", err);
+            }
+          }
+        }
+      }
+    };
+
+    if (req.files) {
+      if (req.files.profileImage) {
+        const newFileName = req.files.profileImage[0].filename;
+        cleanupOldFile(user.profileImage, newFileName);
+        // ?v= ekleyerek tarayıcıyı cache'i yenilemeye zorluyoruz
+        updateFields.profileImage = `${baseUrl}/uploads/${newFileName}?v=${Date.now()}`;
+      }
+
+      if (req.files.banner) {
+        const newFileName = req.files.banner[0].filename;
+        cleanupOldFile(user.banner, newFileName);
+        updateFields.banner = `${baseUrl}/uploads/${newFileName}?v=${Date.now()}`;
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateFields },
+      { new: true, runValidators: true },
+    )
+      .select("-password")
+      .populate("followers", "username profileImage")
+      .populate("following", "username profileImage");
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Profil güncelleme hatası:", error);
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message:
+          "Bu kullanıcı adı zaten alınmış. Lütfen farklı bir tane deneyin.",
+      });
+    }
+
+    res.status(500).json({
+      message: "Profil güncellenirken sunucu tarafında bir hata oluştu.",
+    });
   }
 };
 
@@ -26,6 +120,8 @@ const getUserPosts = async (req, res) => {
     const currentUserId = req.user
       ? (req.user._id || req.user.id).toString()
       : null;
+
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
 
     let savedPostIds = new Set();
     let myLikedIds = new Set();
@@ -75,7 +171,6 @@ const getUserPosts = async (req, res) => {
 
     const formattedPosts = posts.map((post) => {
       const pIdStr = post._id.toString();
-
       const isQuote = post.isRepost && post.text && post.text.trim().length > 0;
       const parent = post.parentPost || post.parentComment;
       const originalContentId = parent ? parent._id.toString() : pIdStr;
@@ -83,6 +178,14 @@ const getUserPosts = async (req, res) => {
       let formattedParent = null;
       if (parent) {
         const parentId = parent._id.toString();
+
+        let parentImageUrl = null;
+        if (parent.image) {
+          parentImageUrl = parent.image.startsWith("http")
+            ? parent.image
+            : `${baseUrl}${parent.image.startsWith("/") ? "" : "/"}${parent.image}`;
+        }
+
         formattedParent = {
           ...parent,
           likesCount: parent.likesCount || 0,
@@ -91,45 +194,38 @@ const getUserPosts = async (req, res) => {
           isRepostedByMe: post.parentComment
             ? repostedCommentIds.has(parentId)
             : repostedPostIds.has(parentId),
-          image: parent.image
-            ? parent.image.startsWith("http")
-              ? parent.image
-              : `http://localhost:5000${parent.image}`
-            : null,
+          image: parentImageUrl,
         };
       }
 
-      // 2. Ana Postun Beğeni Durumu Kararı
-      // Eğer alıntıysa (Quote), sadece kendi beğenisine bak.
-      // Eğer düz repostsa, orijinalin beğenisine de bakabilir.
       const isLiked = isQuote
         ? myLikedIds.has(pIdStr)
         : myLikedIds.has(pIdStr) || myLikedIds.has(originalContentId);
+
+      let postImageUrl = null;
+      if (post.image) {
+        postImageUrl = post.image.startsWith("http")
+          ? post.image
+          : `${baseUrl}${post.image.startsWith("/") ? "" : "/"}${post.image}`;
+      }
 
       return {
         ...post,
         userId: post.user?._id,
         username: post.user?.username,
         profileImage: post.user?.profileImage,
-
         likesCount: post.likesCount || 0,
         likedByCurrentUser: isLiked,
         isSavedByMe: isQuote
           ? savedPostIds.has(pIdStr)
           : savedPostIds.has(pIdStr) || savedPostIds.has(originalContentId),
-
         isRepostedByMe: post.parentComment
           ? repostedCommentIds.has(originalContentId)
           : repostedPostIds.has(originalContentId),
-
         isOwner: currentUserId
           ? post.user?._id?.toString() === currentUserId
           : false,
-        image: post.image
-          ? post.image.startsWith("http")
-            ? post.image
-            : `http://localhost:5000${post.image}`
-          : null,
+        image: postImageUrl,
         parentPost: post.parentPost ? formattedParent : null,
         parentComment: post.parentComment ? formattedParent : null,
       };
@@ -250,6 +346,7 @@ const deleteUser = async (req, res) => {
 
 module.exports = {
   getUserProfile,
+  updateProfile,
   getUserPosts,
   followUser,
   unfollowUser,

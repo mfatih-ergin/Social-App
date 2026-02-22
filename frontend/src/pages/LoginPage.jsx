@@ -1,32 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
-import api from "../api/axios";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 export default function LoginPage() {
-  const { login, setUser } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const origin = location.state?.from?.pathname || "/";
+
+  useEffect(() => {
+    document.title = `Giriş Yap / ${import.meta.env.VITE_APP_NAME}`;
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
+
     try {
       await login(email, password);
-      const response = await api.get("/auth/me");
-      setUser(response.data);
-
-      navigate("/home");
+      navigate(origin, { replace: true });
     } catch (err) {
-      setError("Giriş başarısız oldu. Lütfen bilgilerinizi kontrol edin.");
+      console.error(err);
+      setError(
+        err.response?.data?.message ||
+          "Giriş başarısız. Bilgilerinizi kontrol edin.",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGuestLogin = () => {
-    navigate("/home");
+    navigate("/");
   };
 
   return (
@@ -35,10 +47,12 @@ export default function LoginPage() {
         className="card p-4 shadow"
         style={{ width: "100%", maxWidth: "400px" }}
       >
-        <h2 className="text-center mb-4">Giriş Yap</h2>
+        <h2 className="text-center mb-4 fw-bold">Giriş Yap</h2>
 
         {error && (
-          <div className="alert alert-danger p-2 text-center">{error}</div>
+          <div className="alert alert-danger p-2 text-center small">
+            {error}
+          </div>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -50,6 +64,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
@@ -61,18 +76,27 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className="btn btn-primary w-100">
-            Giriş Yap
+          <button
+            type="submit"
+            className="btn btn-primary w-100 fw-bold"
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="spinner-border spinner-border-sm"></span>
+            ) : (
+              "Giriş Yap"
+            )}
           </button>
         </form>
 
         <div className="text-center mt-3">
           <small className="text-muted">
             Hesabın yok mu?{" "}
-            <Link to="/register" className="text-decoration-none">
+            <Link to="/register" className="text-decoration-none fw-bold">
               Kayıt Ol
             </Link>
           </small>
@@ -85,6 +109,7 @@ export default function LoginPage() {
             onClick={handleGuestLogin}
             className="btn btn-outline-secondary"
             type="button"
+            disabled={loading}
           >
             Misafir Olarak Devam Et
           </button>

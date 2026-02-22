@@ -11,7 +11,7 @@ export default function HomeHeader() {
       }`}
       style={{
         backdropFilter: "blur(10px)",
-        zIndex: 1000,
+        zIndex: 1050,
         height: "75px",
         borderBottom: isDark ? "1px solid #2f3336" : "1px solid #eff3f4",
       }}

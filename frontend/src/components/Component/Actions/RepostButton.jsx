@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../../context/ThemeContext";
 import "../../../styles/RepostButton.css";
 
@@ -9,15 +10,34 @@ export default function RepostButton({
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   return (
-    <div className="dropdown repost-dropdown">
+    <div className={`dropup repost-dropdown`} ref={dropdownRef}>
       <button
         className={`btn d-flex align-items-center gap-2 border-0 bg-transparent p-0 repost-btn 
           ${isDark ? "dark-theme" : ""} ${isReposted ? "reposted" : ""}`}
-        data-bs-toggle="dropdown"
-        aria-expanded="false"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
       >
         <div className="icon-wrapper">
           <i className={`bi bi-repeat fs-4`}></i>
@@ -28,8 +48,16 @@ export default function RepostButton({
       </button>
 
       <ul
-        className={`dropdown-menu shadow ${isDark ? "dropdown-menu-dark" : ""}`}
-        onClick={(e) => e.stopPropagation()}
+        className={`dropdown-menu shadow ${isDark ? "dropdown-menu-dark" : ""} ${isOpen ? "show" : ""}`}
+        style={{
+          display: isOpen ? "block" : "none",
+          position: "absolute",
+          bottom: "100%",
+          left: "0",
+          marginBottom: "10px",
+          zIndex: 1000,
+          transform: "none",
+        }}
       >
         <li>
           <button
@@ -37,6 +65,7 @@ export default function RepostButton({
             onClick={(e) => {
               e.stopPropagation();
               onRepost();
+              setIsOpen(false);
             }}
           >
             <i className="bi bi-repeat"></i>
@@ -49,6 +78,7 @@ export default function RepostButton({
             onClick={(e) => {
               e.stopPropagation();
               onQuote();
+              setIsOpen(false);
             }}
           >
             <i className="bi bi-pencil-square"></i>

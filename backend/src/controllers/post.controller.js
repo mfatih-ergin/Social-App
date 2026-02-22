@@ -217,12 +217,7 @@ const getExplore = async (req, res) => {
       });
     }
 
-    let query = {};
-    if (!userId) {
-      query.isRepost = false;
-    }
-
-    const posts = await Post.find(query)
+    const posts = await Post.find()
       .populate("user", "username profileImage")
       .populate({
         path: "parentPost",
