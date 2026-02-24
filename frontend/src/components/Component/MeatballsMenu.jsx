@@ -6,6 +6,7 @@ import "../../styles/MeatballsMenu.css";
 export default function MeatballsMenu({
   isOwner,
   onDelete,
+  onEdit,
   targetUser,
   onFollowToggle,
 }) {
@@ -51,19 +52,35 @@ export default function MeatballsMenu({
         }}
       >
         {isOwner ? (
-          <li>
-            <button
-              className="dropdown-item text-danger d-flex align-items-center py-2 px-3"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-                setIsOpen(false);
-              }}
-            >
-              <i className="bi bi-trash me-3"></i>
-              Sil
-            </button>
-          </li>
+          <>
+            <li>
+              <button
+                className={`dropdown-item d-flex align-items-center py-2 px-3 ${isDark ? "text-white" : "text-dark"}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                  setIsOpen(false);
+                }}
+              >
+                <i className="bi bi-pencil me-3"></i>
+                Düzenle
+              </button>
+            </li>
+
+            <li>
+              <button
+                className="dropdown-item text-danger d-flex align-items-center py-2 px-3"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                  setIsOpen(false);
+                }}
+              >
+                <i className="bi bi-trash me-3"></i>
+                Sil
+              </button>
+            </li>
+          </>
         ) : (
           <li>
             <button

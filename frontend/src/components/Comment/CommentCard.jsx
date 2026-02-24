@@ -4,7 +4,11 @@ import { useTheme } from "../../context/ThemeContext";
 import { formatRelativeTime } from "../Component/DateInfo";
 import { useAuth } from "../../context/AuthContext";
 
-import { deleteComment, addComment } from "../../api/comment.api";
+import {
+  deleteComment,
+  addComment,
+  updateComment,
+} from "../../api/comment.api";
 import { repostContent } from "../../api/post.api";
 import { followUser } from "../../api/user.api";
 
@@ -15,6 +19,8 @@ import UserInfo from "../Component/UserInfo";
 import PostContent from "../Component/PostContent";
 import CommentModal from "../Comment/CommentModal";
 import QuoteModal from "../Component/QuoteModal";
+import EditPostModal from "../Post/EditPostModal";
+import RepostCard from "../Post/RepostCard";
 
 export default function CommentCard({
   comment,
@@ -24,6 +30,7 @@ export default function CommentCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { theme } = useTheme();
   const { user: currentUser } = useAuth();
@@ -38,6 +45,25 @@ export default function CommentCard({
   }, [comment?.repliesCount]);
 
   if (!comment) return null;
+
+  const isQuote = !!(comment.text?.trim() || comment.image) && comment.isRepost;
+  const isDirectRepost =
+    comment.isRepost &&
+    !isQuote &&
+    (comment.parentPost || comment.parentComment);
+
+  const displayData =
+    isDirectRepost && comment.parentComment ? comment.parentComment : comment;
+
+  const isOwner = !!(
+    currentUser &&
+    (comment.user?._id === currentUser._id ||
+      comment.userId === currentUser._id)
+  );
+
+  if (isDirectRepost && !comment.parentPost && !comment.parentComment) {
+    return null;
+  }
 
   const handleCardClick = () => {
     if (isDetailView || isDeleting) return;
@@ -63,7 +89,11 @@ export default function CommentCard({
   const handleRepostClick = async () => {
     if (!currentUser) return navigate("/login");
     try {
-      await repostContent(comment._id, { type: "comment" });
+      const targetId =
+        isDirectRepost && comment.parentComment
+          ? comment.parentComment._id
+          : comment._id;
+      await repostContent(targetId, { type: "comment" });
       onUpdate?.();
     } catch (error) {
       console.error("Yorum repost hatası:", error);
@@ -75,18 +105,20 @@ export default function CommentCard({
     setIsQuoteModalOpen(true);
   };
 
+  const handleEditClick = () => {
+    setIsEditModalOpen(true);
+  };
+
   const handleDelete = async (e) => {
     if (e) e.stopPropagation();
     if (!window.confirm("Bu yorumu silmek istediğine emin misin?")) return;
-
     try {
       setIsDeleting(true);
       await deleteComment(comment._id);
       onUpdate?.(isDetailView);
     } catch (error) {
-      console.error("Silme hatası:", error);
-      alert("Yorum silinemedi");
       setIsDeleting(false);
+      alert("Yorum silinemedi");
     }
   };
 
@@ -99,13 +131,11 @@ export default function CommentCard({
 
     try {
       const mainPostId = comment.post || comment.postId;
-      if (!mainPostId) return console.error("Post ID bulunamadı!");
-
       await addComment(mainPostId, formData);
       setIsReplyModalOpen(false);
       onUpdate?.();
     } catch (error) {
-      console.error("Yanıta yanıt hatası:", error);
+      console.error(error);
     }
   };
 
@@ -115,13 +145,30 @@ export default function CommentCard({
     formData.append("text", text || "");
     formData.append("type", "comment");
     if (image) formData.append("image", image);
-
     try {
       await repostContent(comment._id, formData);
       setIsQuoteModalOpen(false);
       onUpdate?.();
     } catch (error) {
-      console.error("Yorum alıntı hatası:", error);
+      console.error(error);
+    }
+  };
+
+  const handleEditSubmit = async (editData) => {
+    try {
+      const formData = new FormData();
+      formData.append("text", editData.text);
+      if (editData.image) {
+        formData.append("image", editData.image);
+      } else if (editData.imageDeleted) {
+        formData.append("removeImage", "true");
+      }
+
+      await updateComment(comment._id, formData);
+      setIsEditModalOpen(false);
+      onUpdate?.();
+    } catch (error) {
+      alert("Yorum güncellenemedi.");
     }
   };
 
@@ -132,46 +179,63 @@ export default function CommentCard({
         theme={theme}
         isDeleting={isDeleting}
         clickable={!isDetailView}
-        isReply={!!comment.parentComment}
+        isReply={!!comment.parentComment && !comment.isRepost}
       >
-        {comment.isRepostedByMe && (
-          <div className="repost-indicator mb-1 small text-secondary fw-bold d-flex align-items-center">
+        {isDirectRepost && (
+          <div className="repost-indicator mb-1 small text-secondary fw-bold d-flex align-items-center px-3 pt-2">
             <i className="bi bi-repeat me-2"></i>
-            <span>Repostladın</span>
+            <span>
+              {isOwner ? "Sen paylaştın" : `${comment.username} paylaştı`}
+            </span>
           </div>
         )}
 
-        <div className="d-flex justify-content-between align-items-center mb-2">
+        <div className="d-flex justify-content-between align-items-center mb-2 px-3 pt-2">
           <UserInfo
-            userId={comment.userId || comment.user?._id}
-            username={comment.username || comment.user?.username}
-            profileImage={comment.profileImage || comment.user?.profileImage}
-            createdAt={comment.createdAt}
+            userId={displayData.userId || displayData.user?._id}
+            username={displayData.username || displayData.user?.username}
+            profileImage={
+              displayData.profileImage || displayData.user?.profileImage
+            }
+            createdAt={displayData.createdAt}
             formatTime={formatRelativeTime}
           />
           <div onClick={(e) => e.stopPropagation()}>
             <MeatballsMenu
-              isOwner={comment.isOwner}
+              isOwner={isOwner}
               onDelete={handleDelete}
+              onEdit={handleEditClick}
               targetUser={{
-                _id: comment.userId || comment.user?._id,
-                username: comment.username || comment.user?.username,
-                isFollowing: comment.isFollowingByMe,
+                _id: displayData.userId || displayData.user?._id,
+                username: displayData.username || displayData.user?.username,
+                isFollowing: displayData.isFollowingByMe,
               }}
               onFollowToggle={handleFollowToggle}
             />
           </div>
         </div>
 
-        <div className="post-container">
+        <div className="post-container px-3">
           <PostContent text={comment.text} image={comment.image} />
+
+          {comment.isRepost && (
+            <div className="mt-2 quote-wrapper">
+              {comment.parentPost ? (
+                <RepostCard post={comment.parentPost} isComment={false} />
+              ) : comment.parentComment ? (
+                <RepostCard post={comment.parentComment} isComment={true} />
+              ) : (
+                <RepostCard post={null} />
+              )}
+            </div>
+          )}
         </div>
 
         <hr
-          className={`card-separator ${theme === "dark" ? "opacity-25" : "opacity-10"}`}
+          className={`card-separator mx-3 ${theme === "dark" ? "opacity-25" : "opacity-10"}`}
         />
 
-        <div onClick={(e) => e.stopPropagation()}>
+        <div className="px-3 pb-2" onClick={(e) => e.stopPropagation()}>
           <ContentActions
             id={comment._id}
             type="comment"
@@ -179,7 +243,7 @@ export default function CommentCard({
             likesCount={comment.likesCount}
             count={localRepliesCount}
             repostsCount={comment.repostsCount || 0}
-            isRepostedByMe={comment.isRepostedByMe}
+            isRepostedByMe={!!comment.isRepostedByMe}
             isSavedByMe={comment.isSavedByMe}
             collectionIds={comment.collectionIds || []}
             onActionClick={handleReplyClick}
@@ -200,6 +264,12 @@ export default function CommentCard({
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
         onSubmit={handleQuoteSubmit}
+      />
+      <EditPostModal
+        post={comment}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleEditSubmit}
       />
     </>
   );

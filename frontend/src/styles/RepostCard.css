@@ -21,6 +21,19 @@
   padding: 8px 12px !important;
 }
 
+.mini-quote-card-deleted {
+  border: 1px solid #cfd9de;
+  border-radius: 12px;
+  background-color: rgba(0, 0, 0, 0.02);
+  color: #536471; 
+}
+
+.mini-quote-card-deleted.dark {
+  border: 1px solid #3d4144;
+  background-color: rgba(255, 255, 255, 0.03);
+  color: #71767b;
+}
+
 /* KOYU TEMA AYARI */
 .dark .repost-container-wrapper .card-layout,
 .dark .mini-quote-card {

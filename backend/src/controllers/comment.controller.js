@@ -5,7 +5,6 @@ const User = require("../models/User");
 const Save = require("../models/Save");
 const fs = require("fs");
 const path = require("path");
-const mongoose = require("mongoose");
 
 const formatCommentData = (
   comment,
@@ -75,6 +74,74 @@ const addComment = async (req, res) => {
   } catch (error) {
     console.error("Yorum ekleme hatası:", error);
     res.status(500).json({ message: "Yorum eklenemedi" });
+  }
+};
+
+const updateComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text, removeImage } = req.body;
+    const userId = req.user._id || req.user.id;
+
+    const comment = await Comment.findById(id);
+
+    if (!comment) {
+      return res.status(404).json({ message: "Yorum bulunamadı." });
+    }
+
+    if (comment.user.toString() !== userId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "Bu işlemi yapmak için yetkiniz yok." });
+    }
+
+    let imagePath = comment.image;
+
+    if (removeImage === "true" || req.file) {
+      if (comment.image) {
+        const oldImagePath = path.join(
+          process.cwd(),
+          comment.image.startsWith("/")
+            ? comment.image.slice(1)
+            : comment.image,
+        );
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      imagePath = "";
+    }
+
+    if (req.file) {
+      imagePath = `/uploads/${req.file.filename}`;
+    }
+
+    if (!text?.trim() && !imagePath) {
+      return res
+        .status(400)
+        .json({ message: "Yorum içeriği tamamen boş olamaz." });
+    }
+
+    comment.text = text !== undefined ? text : comment.text;
+    comment.image = imagePath;
+
+    await comment.save();
+
+    res.status(200).json({
+      message: "Yorum güncellendi.",
+      comment: {
+        _id: comment._id,
+        text: comment.text,
+        image: comment.image
+          ? comment.image.startsWith("http")
+            ? comment.image
+            : `http://localhost:5000${comment.image}`
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Yorum Update Hatası:", error);
+    res.status(500).json({ message: "Sunucu hatası, yorum güncellenemedi." });
   }
 };
 
@@ -333,6 +400,7 @@ const deleteComment = async (req, res) => {
 
 module.exports = {
   addComment,
+  updateComment,
   getComments,
   deleteComment,
   getCommentById,

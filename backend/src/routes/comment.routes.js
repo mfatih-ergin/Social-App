@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
   addComment,
+  updateComment,
   getComments,
   deleteComment,
   getCommentById,
@@ -11,6 +12,7 @@ const { protect, optional } = require("../middleware/authMiddleware");
 const upload = require("../middleware/multerMiddleware");
 
 router.post("/:postId", protect, upload.single("image"), addComment);
+router.put("/:id", protect, upload.single("image"), updateComment);
 
 router.get("/:postId", optional, getComments);
 

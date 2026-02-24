@@ -168,6 +168,48 @@ const createPost = async (req, res) => {
   }
 };
 
+const updatePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text, removeImage } = req.body;
+    const userId = req.user._id;
+
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: "Gönderi bulunamadı." });
+
+    if (post.user.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Yetkisiz işlem." });
+    }
+
+    let imagePath = post.image;
+
+    if (removeImage === "true" || req.file) {
+      if (post.image) {
+        const oldPath = path.join(process.cwd(), post.image);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      imagePath = "";
+    }
+
+    if (req.file) {
+      imagePath = `/uploads/${req.file.filename}`;
+    }
+
+    if (!text?.trim() && !imagePath) {
+      return res.status(400).json({ message: "İçerik tamamen boş olamaz." });
+    }
+
+    post.text = text !== undefined ? text : post.text;
+    post.image = imagePath;
+    await post.save();
+
+    res.status(200).json({ message: "Güncellendi", post });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Hata oluştu." });
+  }
+};
+
 const getPosts = async (req, res) => {
   try {
     const userId = req.user?._id?.toString();
@@ -291,18 +333,26 @@ const deletePost = async (req, res) => {
       if (fs.existsSync(postImagePath)) fs.unlinkSync(postImagePath);
     }
 
+    const directReposts = await Post.find({
+      parentPost: id,
+      text: "",
+      image: "",
+    });
+
+    const directRepostIds = directReposts.map((r) => r._id);
+    await Post.deleteMany({ _id: { $in: directRepostIds } });
+
     const comments = await Comment.find({ post: id });
-    comments.forEach((comment) => {
+    for (const comment of comments) {
       if (comment.image) {
         const cp = path.join(process.cwd(), comment.image);
         if (fs.existsSync(cp)) fs.unlinkSync(cp);
       }
-    });
+    }
 
     await Promise.all([
       Like.deleteMany({ post: id }),
       Save.deleteMany({ post: id }),
-      Post.deleteMany({ parentPost: id }),
       Comment.deleteMany({ post: id }),
       Like.deleteMany({ comment: { $in: comments.map((c) => c._id) } }),
     ]);
@@ -364,6 +414,7 @@ const repostContent = async (req, res) => {
 
 module.exports = {
   createPost,
+  updatePost,
   getPosts,
   getExplore,
   deletePost,

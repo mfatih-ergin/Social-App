@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deletePost, repostContent } from "../../api/post.api";
+import { deletePost, repostContent, updatePost } from "../../api/post.api";
 import { addComment } from "../../api/comment.api";
 import { followUser } from "../../api/user.api";
 import { useTheme } from "../../context/ThemeContext";
@@ -14,6 +14,7 @@ import UserInfo from "../Component/UserInfo";
 import PostContent from "../Component/PostContent";
 import CommentModal from "../Comment/CommentModal";
 import QuoteModal from "../Component/QuoteModal";
+import EditPostModal from "../Post/EditPostModal";
 import RepostCard from "./RepostCard";
 
 export default function PostCard({ post, onUpdate, isDetailView = false }) {
@@ -24,34 +25,40 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   if (!post) return null;
 
-  const isDirectRepost = post.isRepost && !post.text;
-  const displayData = isDirectRepost
-    ? post.parentPost || post.parentComment
-    : post;
+  const isQuote = !!(post.text?.trim() || post.image);
+  const isDirectRepost = post.isRepost && !isQuote;
+
+  const displayData =
+    isDirectRepost && post.parentPost ? post.parentPost : post;
 
   const isOwner = !!(
     user &&
     (post.user?._id === user._id || post.userId === user._id)
   );
 
+  if (isDirectRepost && !post.parentPost && !post.parentComment) {
+    return null;
+  }
+
   const handleCardClick = () => {
     if (isDetailView || isDeleting) return;
 
     if (isDirectRepost) {
-      const isParentPost = !!post.parentPost;
-      const targetId = isParentPost
-        ? post.parentPost?._id || post.parentPost
-        : post.parentComment?._id || post.parentComment;
-
+      const targetId = post.parentPost?._id || post.parentComment?._id;
+      const targetPath = post.parentPost
+        ? `/post/${targetId}`
+        : `/comment/${targetId}`;
       if (targetId) {
-        navigate(isParentPost ? `/post/${targetId}` : `/comment/${targetId}`);
+        navigate(targetPath);
+        return;
       }
-    } else {
-      navigate(`/post/${post._id}`);
     }
+
+    navigate(`/post/${post._id}`);
   };
 
   const handleDelete = async (e) => {
@@ -67,14 +74,35 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
     }
   };
 
-  const handleFollowToggle = async (targetId, isCurrentlyFollowing) => {
-    if (!user) return navigate("/login");
+  const handleEditClick = () => {
+    if (isDirectRepost) {
+      alert("Bu tür bir gönderi düzenlenemez.");
+      return;
+    }
+    setIsEditModalOpen(true);
+  };
 
+  const handleEditSubmit = async (editData) => {
+    try {
+      const formData = new FormData();
+      formData.append("text", editData.text);
+      if (editData.image) formData.append("image", editData.image);
+      else if (editData.imageDeleted) formData.append("removeImage", "true");
+
+      await updatePost(post._id, formData);
+      setIsEditModalOpen(false);
+      onUpdate?.();
+    } catch (error) {
+      alert("Güncelleme başarısız.");
+    }
+  };
+
+  const handleFollowToggle = async (targetId) => {
+    if (!user) return navigate("/login");
     try {
       await followUser(targetId);
       onUpdate?.();
     } catch (error) {
-      console.error("Takip işlemi hatası:", error);
       alert("İşlem gerçekleştirilemedi.");
     }
   };
@@ -88,11 +116,10 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
   const handleDirectRepost = async () => {
     if (!user) return navigate("/login");
     try {
-      const type = displayData.post || post.parentComment ? "comment" : "post";
-      await repostContent(displayData._id, { type });
+      await repostContent(post._id, { type: "post" });
       onUpdate?.();
     } catch (error) {
-      console.error("Repost işlemi başarısız:", error);
+      console.error("Repost hatası:", error);
     }
   };
 
@@ -107,11 +134,11 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
     formData.append("text", text);
     if (image) formData.append("image", image);
     try {
-      await addComment(displayData._id, formData);
+      await addComment(post._id, formData);
       setIsCommentModalOpen(false);
       onUpdate?.();
     } catch (error) {
-      console.error("Hata:", error);
+      console.error(error);
     }
   };
 
@@ -119,40 +146,16 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
     const { text, image } = quoteData;
     const formData = new FormData();
     formData.append("text", text || "");
-    formData.append(
-      "type",
-      displayData.post || post.parentComment ? "comment" : "post",
-    );
+    formData.append("type", "post");
     if (image) formData.append("image", image);
     try {
-      await repostContent(displayData._id, formData);
+      await repostContent(post._id, formData);
       setIsQuoteModalOpen(false);
       onUpdate?.();
     } catch (error) {
-      console.error("Hata:", error);
+      console.error(error);
     }
   };
-
-  if (!displayData) {
-    return (
-      <CardLayout theme={theme} isDeleting={true} clickable={false}>
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <div className="text-secondary small d-flex align-items-center">
-            <i className="bi bi-exclamation-circle me-2"></i>
-            <span>İçerik artık mevcut değil</span>
-          </div>
-          <div onClick={(e) => e.stopPropagation()}>
-            <MeatballsMenu isOwner={isOwner} onDelete={handleDelete} />
-          </div>
-        </div>
-        <div className="py-2">
-          <p className="text-secondary fst-italic mb-0">
-            Orijinal içerik silindi.
-          </p>
-        </div>
-      </CardLayout>
-    );
-  }
 
   return (
     <>
@@ -162,14 +165,16 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
         isDeleting={isDeleting}
         clickable={!isDetailView}
       >
-        {isDirectRepost && isOwner && (
-          <div className="repost-indicator mb-1 small text-secondary fw-bold d-flex align-items-center">
+        {isDirectRepost && (
+          <div className="repost-indicator mb-1 small text-secondary fw-bold d-flex align-items-center px-3 pt-2">
             <i className="bi bi-repeat me-2"></i>
-            <span>Repost</span>
+            <span>
+              {isOwner ? "Sen paylaştın" : `${post.username} paylaştı`}
+            </span>
           </div>
         )}
 
-        <div className="d-flex justify-content-between align-items-center mb-2">
+        <div className="d-flex justify-content-between align-items-center mb-2 px-3 pt-2">
           <UserInfo
             userId={displayData.user?._id || displayData.userId}
             username={displayData.user?.username || displayData.username}
@@ -183,6 +188,7 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
             <MeatballsMenu
               isOwner={isOwner}
               onDelete={handleDelete}
+              onEdit={handleEditClick}
               targetUser={{
                 _id: displayData.user?._id || displayData.userId,
                 username: displayData.user?.username || displayData.username,
@@ -193,39 +199,77 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
           </div>
         </div>
 
-        <div className="post-container">
-          <PostContent
-            text={isDirectRepost ? displayData.text : post.text}
-            image={isDirectRepost ? displayData.image : post.image}
-          />
-          {post.isRepost && post.text && (
+        <div className="post-container px-3">
+          <PostContent text={post.text} image={post.image} />
+
+          {post.isRepost && (
             <div className="mt-2 quote-wrapper">
               {post.parentPost ? (
                 <RepostCard post={post.parentPost} isComment={false} />
               ) : post.parentComment ? (
                 <RepostCard post={post.parentComment} isComment={true} />
-              ) : null}
+              ) : (
+                <RepostCard post={null} />
+              )}
             </div>
           )}
         </div>
 
         <hr
-          className={`card-separator ${theme === "dark" ? "opacity-25" : "opacity-10"}`}
+          className={`card-separator mx-3 ${theme === "dark" ? "opacity-25" : "opacity-10"}`}
         />
 
-        <div onClick={(e) => e.stopPropagation()}>
+        <div className="px-3 pb-2" onClick={(e) => e.stopPropagation()}>
           <ContentActions
-            id={displayData._id}
-            type="post"
-            likedByCurrentUser={displayData.likedByCurrentUser}
-            likesCount={displayData.likesCount}
-            count={displayData.commentsCount}
-            repostsCount={displayData.repostsCount}
-            isSavedByMe={displayData.isSavedByMe || post.isSavedByMe}
-            collectionIds={
-              displayData.collectionIds || post.collectionIds || []
+            id={
+              isDirectRepost
+                ? post.parentPost?._id || post.parentComment?._id
+                : post._id
             }
-            isRepostedByMe={displayData.isRepostedByMe || post.isRepostedByMe}
+            type={isDirectRepost && post.parentComment ? "comment" : "post"}
+            repostsCount={
+              isDirectRepost
+                ? post.parentPost?.repostsCount ||
+                  post.parentComment?.repostsCount ||
+                  0
+                : post.repostsCount || 0
+            }
+            likesCount={
+              isDirectRepost
+                ? post.parentPost?.likesCount ||
+                  post.parentComment?.likesCount ||
+                  0
+                : post.likesCount || 0
+            }
+            count={
+              isDirectRepost
+                ? post.parentPost?.commentsCount ||
+                  post.parentComment?.repliesCount ||
+                  0
+                : post.commentsCount || 0
+            }
+            isRepostedByMe={
+              isDirectRepost ? true : post.isRepostedByMe || false
+            }
+            likedByCurrentUser={
+              isDirectRepost
+                ? post.parentPost?.likedByCurrentUser ||
+                  post.parentComment?.likedByCurrentUser
+                : post.likedByCurrentUser
+            }
+            isSavedByMe={
+              isDirectRepost
+                ? post.parentPost?.isSavedByMe ||
+                  post.parentComment?.isSavedByMe
+                : post.isSavedByMe
+            }
+            collectionIds={
+              isDirectRepost
+                ? post.parentPost?.collectionIds ||
+                  post.parentComment?.collectionIds ||
+                  []
+                : post.collectionIds || []
+            }
             onActionClick={handleCommentClick}
             onRepostClick={handleDirectRepost}
             onQuoteClick={handleQuoteClick}
@@ -234,16 +278,22 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
       </CardLayout>
 
       <CommentModal
-        post={displayData}
+        post={post}
         isOpen={isCommentModalOpen}
         onClose={() => setIsCommentModalOpen(false)}
         onSubmit={handleCommentSubmit}
       />
       <QuoteModal
-        post={displayData}
+        post={post}
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
         onSubmit={handleQuoteSubmit}
+      />
+      <EditPostModal
+        post={post}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleEditSubmit}
       />
     </>
   );

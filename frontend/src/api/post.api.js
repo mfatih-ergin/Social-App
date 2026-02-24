@@ -2,6 +2,8 @@ import api from "./axios";
 
 export const createPost = (data) => api.post("/posts/create", data);
 
+export const updatePost = (postId, data) => api.put(`/posts/${postId}`, data);
+
 export const getHomePosts = () => {
   return api.get("/posts");
 };

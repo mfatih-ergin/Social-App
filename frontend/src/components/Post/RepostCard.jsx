@@ -9,7 +9,20 @@ export default function RepostCard({ post, isComment = false }) {
   const { theme } = useTheme();
   const navigate = useNavigate();
 
-  if (!post) return null;
+  if (!post) {
+    return (
+      <div className="repost-container-wrapper mt-2">
+        <div
+          className={`mini-quote-card-deleted ${theme === "dark" ? "dark" : ""}`}
+        >
+          <div className="d-flex align-items-center gap-2 p-3">
+            <i className="bi bi-exclamation-circle fs-5"></i>
+            <span className="fw-medium">Bu içerik artık mevcut değil.</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const source = post._doc || post;
 
@@ -25,9 +38,7 @@ export default function RepostCard({ post, isComment = false }) {
 
   const handleCardClick = (e) => {
     e.stopPropagation();
-
     if (!id) return;
-
     const targetPath = isComment ? `/comment/${id}` : `/post/${id}`;
     navigate(targetPath);
   };
@@ -82,7 +93,7 @@ export default function RepostCard({ post, isComment = false }) {
 
           {!contentText.trim() && !contentImage && (
             <p className="small mb-0 text-muted opacity-50 fst-italic">
-              İçerik yüklenemedi veya artık mevcut değil.
+              İçerik boş.
             </p>
           )}
         </div>

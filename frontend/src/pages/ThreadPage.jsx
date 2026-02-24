@@ -50,6 +50,10 @@ export default function PostPage({ type = "post" }) {
           ? rawData.user?._id?.toString() === currentUserId?.toString() ||
             rawData.userId?.toString() === currentUserId?.toString()
           : false,
+        isRepostedByMe: !!rawData.isRepostedByMe,
+        isRepost: !!rawData.isRepost,
+        parentPost: rawData.parentPost || null,
+        parentComment: rawData.parentComment || null,
       };
 
       setContent(formattedData);
@@ -130,10 +134,21 @@ export default function PostPage({ type = "post" }) {
                 Yanıtlar
               </span>
             </div>
-
             <CommentList
-              postId={type === "post" ? contentId : null}
-              commentId={type === "comment" ? contentId : null}
+              postId={
+                type === "post"
+                  ? content.isRepost && !content.text && content.parentPost
+                    ? content.parentPost._id
+                    : contentId
+                  : null
+              }
+              commentId={
+                type === "comment"
+                  ? contentId
+                  : content.isRepost && !content.text && content.parentComment
+                    ? content.parentComment._id
+                    : null
+              }
               refreshTrigger={refreshTrigger}
               onCommentDeleted={() => handleUpdateAll(false)}
             />

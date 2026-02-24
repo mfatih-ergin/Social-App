@@ -5,6 +5,9 @@ export const addComment = async (postId, formData) => {
   return response.data;
 };
 
+export const updateComment = (commentId, data) =>
+  api.put(`/comments/${commentId}`, data);
+
 export const getCommentsByPostId = (postId) => {
   return api.get(`/comments/${postId}`);
 };
