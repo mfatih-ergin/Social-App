@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/MeatballsMenu.css";
@@ -14,6 +15,8 @@ export default function MeatballsMenu({
   const menuRef = useRef(null);
   const { theme } = useTheme();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const isDark = theme === "dark";
 
   useEffect(() => {
@@ -94,10 +97,12 @@ export default function MeatballsMenu({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+
                 if (!user) {
-                  alert("Bu işlem için giriş yapmalısınız!");
+                  navigate("/login", { state: { from: location } });
                   return;
                 }
+
                 onFollowToggle(targetUser?._id, targetUser?.isFollowing);
                 setIsOpen(false);
               }}

@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const {
   getUserProfile,
+  getFollowers,
+  getFollowing,
   updateProfile,
   getUserPosts,
   followUser,
@@ -14,6 +16,10 @@ const upload = require("../middleware/multerMiddleware");
 
 router.get("/:id", protect, getUserProfile);
 router.get("/:userId/userposts", protect, getUserPosts);
+
+router.get("/:userId/followers", protect, getFollowers);
+router.get("/:userId/following", protect, getFollowing);
+
 router.put(
   "/settings/profile",
   protect,

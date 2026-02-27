@@ -125,7 +125,10 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
 
   const handleQuoteClick = () => {
     if (!user) return navigate("/login");
-    setIsQuoteModalOpen(true);
+    const quoteTarget = isDirectRepost
+      ? post.parentPost || post.parentComment
+      : post;
+    setIsQuoteModalOpen(quoteTarget);
   };
 
   const handleCommentSubmit = async (commentData) => {
@@ -248,9 +251,7 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
                   0
                 : post.commentsCount || 0
             }
-            isRepostedByMe={
-              isDirectRepost ? true : post.isRepostedByMe || false
-            }
+            isRepostedByMe={post.isRepostedByMe}
             likedByCurrentUser={
               isDirectRepost
                 ? post.parentPost?.likedByCurrentUser ||
@@ -284,7 +285,7 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
         onSubmit={handleCommentSubmit}
       />
       <QuoteModal
-        post={post}
+        post={isDirectRepost ? post.parentPost || post.parentComment : post}
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
         onSubmit={handleQuoteSubmit}

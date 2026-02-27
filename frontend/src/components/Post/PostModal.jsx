@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import ReactDOM from "react-dom";
 import { useTheme } from "../../context/ThemeContext";
 import PostForm from "./PostForm";
@@ -6,6 +7,17 @@ import "../../styles/PostModal.css";
 export default function PostModal({ isOpen, onClose, onPostCreated }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

@@ -12,7 +12,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const origin = location.state?.from?.pathname || "/";
+  const origin = location.state?.from || "/";
+
+  const isEmailValid =
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]{2,}\.[a-zA-Z]{2,}$/.test(email) &&
+    /\.(com|net|org|edu|gov|info|me|com\.tr|org\.tr|edu\.tr)$/i.test(email);
+
+  const isPasswordLongEnough = password.length >= 8;
 
   useEffect(() => {
     document.title = `Giriş Yap / ${import.meta.env.VITE_APP_NAME}`;
@@ -21,58 +27,69 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
+      setLoading(true);
       await login(email, password);
       navigate(origin, { replace: true });
     } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.message ||
-          "Giriş başarısız. Bilgilerinizi kontrol edin.",
-      );
+      setError(err.response?.data?.message || "E-posta veya şifre hatalı.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGuestLogin = () => {
-    navigate("/");
-  };
-
   return (
     <div className="container d-flex justify-content-center align-items-center vh-100">
       <div
-        className="card p-4 shadow"
-        style={{ width: "100%", maxWidth: "400px" }}
+        className="card p-3 shadow border-0"
+        style={{ width: "100%", maxWidth: "400px", borderRadius: "15px" }}
       >
-        <h2 className="text-center mb-4 fw-bold">Giriş Yap</h2>
+        <h3 className="text-center mb-3 fw-bold">Giriş Yap</h3>
 
         {error && (
-          <div className="alert alert-danger p-2 text-center small">
+          <div className="alert alert-danger p-2 text-center small mb-3 animate__animated animate__shakeX">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Email Adresi"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-            />
+          <div className="mb-3 position-relative">
+            <label className="form-label small fw-bold text-secondary mb-1 d-flex justify-content-between">
+              Email Adresi
+              {email.length > 0 && (
+                <span
+                  className={isEmailValid ? "text-success" : "text-danger"}
+                  style={{ fontSize: "0.7rem" }}
+                >
+                  {isEmailValid ? "Geçerli format" : "Geçersiz format"}
+                </span>
+              )}
+            </label>
+            <div className="input-group">
+              <input
+                type="email"
+                className={`form-control form-control-sm ${email.length > 0 ? (isEmailValid ? "is-valid" : "is-invalid") : ""}`}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <div className="mb-3">
+            <label className="form-label small fw-bold text-secondary mb-1 d-flex justify-content-between">
+              Şifre
+              {password.length > 0 && !isPasswordLongEnough && (
+                <span className="text-muted" style={{ fontSize: "0.7rem" }}>
+                  En az 8 karakter olmalı
+                </span>
+              )}
+            </label>
             <input
               type="password"
-              className="form-control"
-              placeholder="Şifre"
+              className={`form-control form-control-sm ${password.length > 0 ? (isPasswordLongEnough ? "is-valid" : "") : ""}`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -82,8 +99,8 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="btn btn-primary w-100 fw-bold"
-            disabled={loading}
+            className="btn btn-primary w-100 fw-bold py-2 mt-2 shadow-sm"
+            disabled={loading || !isEmailValid || password.length === 0}
           >
             {loading ? (
               <span className="spinner-border spinner-border-sm"></span>
@@ -102,12 +119,12 @@ export default function LoginPage() {
           </small>
         </div>
 
-        <hr className="my-4" />
+        <hr className="my-3 opacity-25" />
 
         <div className="d-grid">
           <button
-            onClick={handleGuestLogin}
-            className="btn btn-outline-secondary"
+            onClick={() => navigate("/")}
+            className="btn btn-outline-secondary btn-sm"
             type="button"
             disabled={loading}
           >

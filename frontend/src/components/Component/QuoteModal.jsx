@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import Avatar from "../Component/Avatar";
@@ -15,6 +15,17 @@ export default function QuoteModal({ post, isOpen, onClose, onSubmit }) {
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
   if (!isOpen || !post) return null;
 
@@ -79,8 +90,15 @@ export default function QuoteModal({ post, isOpen, onClose, onSubmit }) {
                 </div>
               )}
 
-              <div className="quote-original-preview border rounded-3 overflow-hidden">
-                <RepostCard post={post} />
+              <div className="quote-original-preview rounded-3 overflow-hidden">
+                <RepostCard
+                  post={post}
+                  isComment={
+                    !!post.parentPostId ||
+                    !!post.postId ||
+                    post.type === "comment"
+                  }
+                />
               </div>
             </div>
           </div>

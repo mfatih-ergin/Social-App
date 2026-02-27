@@ -44,7 +44,7 @@ export default function RepostCard({ post, isComment = false }) {
   };
 
   return (
-    <div className="repost-container-wrapper mt-2">
+    <div>
       <CardLayout
         theme={theme}
         clickable={true}
@@ -53,7 +53,7 @@ export default function RepostCard({ post, isComment = false }) {
         isQuote={true}
       >
         <div className="d-flex align-items-center gap-2 mb-2">
-          <Avatar userId={userId} profileImage={profileImage} size="20px" />
+          <Avatar userId={userId} profileImage={profileImage} size="30px" />
           <span
             className="fw-bold small text-truncate"
             style={{ maxWidth: "150px", fontSize: "0.85rem" }}

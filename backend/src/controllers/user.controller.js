@@ -34,6 +34,12 @@ const getUserProfile = async (req, res) => {
         profileImage: formatImageUrl(f.profileImage),
       }));
     }
+    if (user.following) {
+      user.following = user.following.map((f) => ({
+        ...f,
+        profileImage: formatImageUrl(f.profileImage),
+      }));
+    }
 
     res.json(user);
   } catch (error) {
@@ -41,6 +47,74 @@ const getUserProfile = async (req, res) => {
     res
       .status(500)
       .json({ message: "Profil bilgileri getirilirken hata oluştu." });
+  }
+};
+
+const getFollowers = async (req, res) => {
+  try {
+    const userId = req.params.userId || req.params.id;
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+
+    const user = await User.findById(userId)
+      .populate("followers", "username profileImage bio following followers")
+      .select("followers")
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    const formattedFollowers = (user.followers || [])
+      .filter((f) => f._id.toString() !== userId.toString())
+      .map((f) => ({
+        ...f,
+        profileImage: f.profileImage
+          ? f.profileImage.startsWith("http")
+            ? f.profileImage
+            : `${baseUrl}${f.profileImage.startsWith("/") ? "" : "/"}${f.profileImage}`
+          : null,
+      }));
+
+    res.json(formattedFollowers);
+  } catch (error) {
+    console.error("getFollowers Hatası:", error);
+    res
+      .status(500)
+      .json({ message: "Takipçiler yüklenirken bir hata oluştu." });
+  }
+};
+
+const getFollowing = async (req, res) => {
+  try {
+    const userId = req.params.userId || req.params.id;
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+
+    const user = await User.findById(userId)
+      .populate("following", "username profileImage bio following followers")
+      .select("following")
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    const filteredFollowing = (user.following || [])
+      .filter((f) => f._id.toString() !== userId.toString())
+      .map((f) => ({
+        ...f,
+        profileImage: f.profileImage
+          ? f.profileImage.startsWith("http")
+            ? f.profileImage
+            : `${baseUrl}${f.profileImage.startsWith("/") ? "" : "/"}${f.profileImage}`
+          : null,
+      }));
+
+    res.json(filteredFollowing);
+  } catch (error) {
+    console.error("getFollowing Hatası:", error);
+    res
+      .status(500)
+      .json({ message: "Takip edilenler yüklenirken bir hata oluştu." });
   }
 };
 
@@ -100,6 +174,11 @@ const updateProfile = async (req, res) => {
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Profil güncelleme hatası:", error);
+
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ message: messages[0] });
+    }
 
     if (error.code === 11000) {
       return res.status(400).json({
@@ -346,6 +425,8 @@ const deleteUser = async (req, res) => {
 
 module.exports = {
   getUserProfile,
+  getFollowers,
+  getFollowing,
   updateProfile,
   getUserPosts,
   followUser,

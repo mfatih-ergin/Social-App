@@ -102,7 +102,8 @@ export default function CommentCard({
 
   const handleQuoteClick = () => {
     if (!currentUser) return navigate("/login");
-    setIsQuoteModalOpen(true);
+    const quoteTarget = isDirectRepost ? comment.parentComment : comment;
+    setIsQuoteModalOpen(quoteTarget);
   };
 
   const handleEditClick = () => {
@@ -243,7 +244,7 @@ export default function CommentCard({
             likesCount={comment.likesCount}
             count={localRepliesCount}
             repostsCount={comment.repostsCount || 0}
-            isRepostedByMe={!!comment.isRepostedByMe}
+            isRepostedByMe={comment.isRepostedByMe}
             isSavedByMe={comment.isSavedByMe}
             collectionIds={comment.collectionIds || []}
             onActionClick={handleReplyClick}
@@ -260,7 +261,7 @@ export default function CommentCard({
         onSubmit={handleReplySubmit}
       />
       <QuoteModal
-        post={comment}
+        post={isDirectRepost ? comment.parentComment : comment}
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
         onSubmit={handleQuoteSubmit}

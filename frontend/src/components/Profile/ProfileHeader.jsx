@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import EditProfileModal from "./EditProfileModal";
 
@@ -11,6 +12,7 @@ export default function ProfileHeader({
   onUpdate,
 }) {
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isDark = theme === "dark";
 
@@ -85,11 +87,26 @@ export default function ProfileHeader({
           </p>
 
           <div className="d-flex gap-4 mb-4">
-            <span className={isDark ? "text-light" : "text-dark"}>
+            <span
+              className={
+                isDark
+                  ? "text-light cursor-pointer"
+                  : "text-dark cursor-pointer"
+              }
+              onClick={() => navigate(`/profile/${profile._id}/following`)}
+            >
               <span className="fw-bold">{profile.following?.length || 0}</span>{" "}
               <span className="text-secondary">Takip Edilen</span>
             </span>
-            <span className={isDark ? "text-light" : "text-dark"}>
+
+            <span
+              className={
+                isDark
+                  ? "text-light cursor-pointer"
+                  : "text-dark cursor-pointer"
+              }
+              onClick={() => navigate(`/profile/${profile._id}/followers`)}
+            >
               <span className="fw-bold">{profile.followers?.length || 0}</span>{" "}
               <span className="text-secondary">Takipçi</span>
             </span>

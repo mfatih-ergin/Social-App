@@ -42,8 +42,8 @@ export default function Settings() {
 
         alert("Hesabınız başarıyla silindi.");
 
+        navigate("/", { replace: true });
         logout();
-        navigate("/");
       } catch (error) {
         console.error("Hesap silinirken hata oluştu:", error);
         alert(

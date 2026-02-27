@@ -10,6 +10,7 @@ import ProfilePage from "../pages/ProfilePage";
 import BookmarksPage from "../pages/BookmarksPage";
 import Settings from "../pages/Settings";
 import ThreadPage from "../pages/ThreadPage";
+import FollowPage from "../pages/FollowPage";
 
 export default function AppRouter() {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export default function AppRouter() {
         element={<ThreadPage type="comment" />}
       />
       <Route path="/profile/:id" element={<ProfilePage />} />
+      <Route path="/profile/:userId/:type" element={<FollowPage />} />
 
       <Route
         path="/bookmarks"

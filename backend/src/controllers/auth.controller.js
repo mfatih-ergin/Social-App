@@ -40,13 +40,15 @@ const getMe = async (req, res) => {
 const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
     if (!username || !email || !password) {
       return res.status(400).json({ message: "Tüm alanlar zorunlu" });
     }
 
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
     if (userExists) {
-      return res.status(400).json({ message: "Kullanıcı zaten mevcut" });
+      const field = userExists.email === email ? "Email" : "Kullanıcı adı";
+      return res.status(400).json({ message: `${field} zaten kullanımda.` });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -65,7 +67,20 @@ const register = async (req, res) => {
     const fullUser = await getFullUser(user._id);
     res.status(201).json({ token, user: fullUser });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error("REGISTER HATASI:", error);
+
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ message: messages[0] });
+    }
+
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ message: "Kullanıcı adı veya email zaten mevcut." });
+    }
+
+    res.status(500).json({ message: "Kayıt sırasında sunucu hatası oluştu." });
   }
 };
 
@@ -74,8 +89,13 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ message: "Geçersiz bilgiler" });
+    if (!user) {
+      return res.status(400).json({ message: "Email veya şifre hatalı" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Email veya şifre hatalı" });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -85,7 +105,8 @@ const login = async (req, res) => {
     const fullUser = await getFullUser(user._id);
     res.json({ token, user: fullUser });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error("LOGIN HATASI:", error);
+    res.status(500).json({ message: "Giriş yapılırken sunucu hatası oluştu." });
   }
 };
 

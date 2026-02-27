@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getUserProfile, followUser, unfollowUser } from "../api/user.api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -11,6 +11,8 @@ import RightAside from "../components/Layout/RightAside";
 
 export default function ProfilePage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user: currentUser } = useAuth();
   const { theme } = useTheme();
 
@@ -36,6 +38,12 @@ export default function ProfilePage() {
   const fetchProfile = async (silent = false) => {
     if (!id || id === "undefined") return;
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login", { state: { from: location }, replace: true });
+      return;
+    }
+
     try {
       if (!silent) setLoading(true);
 
@@ -43,7 +51,16 @@ export default function ProfilePage() {
       setProfile(res.data);
       setError(null);
     } catch (err) {
-      console.error("Profil çekme hatası:", err);
+      //console.error("Profil çekme hatası:", err);
+
+      if (
+        err.response?.status === 401 ||
+        err.response?.data?.message?.includes("Token")
+      ) {
+        navigate("/login", { state: { from: location }, replace: true });
+        return;
+      }
+
       if (!silent)
         setError(err.response?.data?.message || "Kullanıcı bulunamadı.");
     } finally {

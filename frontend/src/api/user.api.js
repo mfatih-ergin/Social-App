@@ -2,6 +2,9 @@ import api from "./axios";
 
 export const getUserProfile = (userId) => api.get(`/users/${userId}`);
 
+export const getFollowers = (userId) => api.get(`/users/${userId}/followers`);
+export const getFollowing = (userId) => api.get(`/users/${userId}/following`);
+
 export const updateProfile = (formData) =>
   api.put("/users/settings/profile", formData, {
     headers: {
