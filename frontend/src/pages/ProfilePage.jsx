@@ -79,12 +79,11 @@ export default function ProfilePage() {
     if (btnLoading || !currentUser || !profile) return;
     try {
       setBtnLoading(true);
-      const isFollowingNow = profile.followers.some(
-        (f) => (f._id || f) === currentUser._id,
-      );
-      isFollowingNow
+
+      profile.isFollowingByMe
         ? await unfollowUser(profile._id)
         : await followUser(profile._id);
+
       const res = await getUserProfile(id);
       setProfile(res.data);
     } catch (err) {
@@ -131,9 +130,7 @@ export default function ProfilePage() {
             <ProfileHeader
               profile={profile}
               isOwnProfile={isOwnProfile}
-              isFollowing={profile?.followers.some(
-                (f) => (f._id || f) === currentUser?._id,
-              )}
+              isFollowing={profile?.isFollowingByMe}
               handleFollowToggle={handleFollowToggle}
               btnLoading={btnLoading}
               onUpdate={() => fetchProfile(true)}

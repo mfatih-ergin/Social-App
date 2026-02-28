@@ -1,0 +1,54 @@
+/* Sidebar.css - Sadece Ana İskelet ve Logo */
+
+.sidebar-container {
+  width: 280px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+}
+
+.sidebar-container.dark-theme {
+  background-color: #000000;
+  color: white;
+  border-right: 1px solid #2f3336 !important;
+}
+
+.sidebar-container.light-theme {
+  background-color: #ffffff;
+  color: #000000;
+  border-right: 1px solid #eff3f4 !important;
+}
+
+.sidebar-logo-container {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-logo-container .navbar-brand {
+  color: inherit;
+  font-weight: 900;
+  text-decoration: none;
+  font-size: 1.5rem;
+  padding: 0 0.75rem;
+}
+
+hr { 
+  opacity: 0.1; 
+  margin: 1rem 0; 
+  border-top: 1px solid currentColor;
+}
+
+.nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}

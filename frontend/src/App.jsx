@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import Navbar from "./components/Layout/Navbar";
+import Sidebar from "./components/Layout/Sidebar/Sidebar";
 import AppRouter from "./routes/AppRouter";
 
 function App() {
@@ -11,8 +11,8 @@ function App() {
   return (
     <div className="d-flex min-vh-100">
       {showLayout && (
-        <aside className="bg-dark sticky-top vh-100" style={{ width: "280px" }}>
-          <Navbar />
+        <aside className="sticky-top vh-100" style={{ width: "280px" }}>
+          <Sidebar />
         </aside>
       )}
 

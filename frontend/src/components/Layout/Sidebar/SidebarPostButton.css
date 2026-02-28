@@ -1,0 +1,29 @@
+/* SidebarPostButton.css */
+
+.btn-post-custom {
+  background-color: #1d9bf0;
+  color: white !important;
+  font-weight: bold;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50px;
+  height: 52px;
+  width: 100%;
+  border: none;
+  transition: background-color 0.2s, transform 0.1s;
+  font-size: 1.1rem;
+}
+
+.btn-post-custom:hover {
+  background-color: #1a8cd8;
+}
+
+.btn-post-custom:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 1200px) {
+}

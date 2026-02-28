@@ -8,12 +8,10 @@ const fs = require("fs");
 const getUserProfile = async (req, res) => {
   try {
     const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+    const targetUserId = req.params.id;
+    const currentUserId = req.user ? req.user._id : null;
 
-    const user = await User.findById(req.params.id)
-      .select("-password")
-      .populate("followers", "username profileImage")
-      .populate("following", "username profileImage")
-      .lean();
+    const user = await User.findById(targetUserId).select("-password").lean();
 
     if (!user) {
       return res.status(404).json({ message: "Kullanıcı bulunamadı" });
@@ -28,18 +26,15 @@ const getUserProfile = async (req, res) => {
     user.profileImage = formatImageUrl(user.profileImage);
     user.banner = formatImageUrl(user.banner);
 
-    if (user.followers) {
-      user.followers = user.followers.map((f) => ({
-        ...f,
-        profileImage: formatImageUrl(f.profileImage),
-      }));
-    }
-    if (user.following) {
-      user.following = user.following.map((f) => ({
-        ...f,
-        profileImage: formatImageUrl(f.profileImage),
-      }));
-    }
+    user.followersCount = user.followers ? user.followers.length : 0;
+    user.followingCount = user.following ? user.following.length : 0;
+
+    user.isFollowingByMe = currentUserId
+      ? user.followers.some((id) => id.toString() === currentUserId.toString())
+      : false;
+
+    delete user.followers;
+    delete user.following;
 
     res.json(user);
   } catch (error) {

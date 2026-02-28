@@ -95,7 +95,7 @@ export default function ProfileHeader({
               }
               onClick={() => navigate(`/profile/${profile._id}/following`)}
             >
-              <span className="fw-bold">{profile.following?.length || 0}</span>{" "}
+              <span className="fw-bold">{profile.followingCount || 0}</span>{" "}
               <span className="text-secondary">Takip Edilen</span>
             </span>
 
@@ -107,7 +107,7 @@ export default function ProfileHeader({
               }
               onClick={() => navigate(`/profile/${profile._id}/followers`)}
             >
-              <span className="fw-bold">{profile.followers?.length || 0}</span>{" "}
+              <span className="fw-bold">{profile.followersCount || 0}</span>{" "}
               <span className="text-secondary">Takipçi</span>
             </span>
           </div>
