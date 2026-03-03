@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createCollection } from "../../api/collection.api";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -7,6 +7,17 @@ export default function CreateCollectionModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

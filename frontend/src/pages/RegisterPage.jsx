@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { validateForm } from "../utils/validation";
@@ -33,10 +33,6 @@ export default function RegisterPage() {
     lower: /[a-z]/.test(password),
     number: /[0-9]/.test(password),
   };
-
-  useEffect(() => {
-    document.title = `Kayıt Ol / ${import.meta.env.VITE_APP_NAME}`;
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,7 +97,7 @@ export default function RegisterPage() {
               disabled={loading}
             />
             {activeField === "username" && (
-              <div className="mt-2 p-2 bg-light rounded border shadow-sm animate__animated animate__fadeIn">
+              <div className="mt-2 p-2 bg-light rounded border shadow-sm">
                 <div className="row g-0">
                   <div className="col-6">
                     {renderCheckItem(userChecks.length, "3-20 Karakter")}
@@ -128,7 +124,7 @@ export default function RegisterPage() {
               disabled={loading}
             />
             {activeField === "email" && (
-              <div className="mt-2 p-2 bg-light rounded border shadow-sm animate__animated animate__fadeIn">
+              <div className="mt-2 p-2 bg-light rounded border shadow-sm">
                 <div className="row g-0">
                   <div className="col-6">
                     {renderCheckItem(emailChecks.format, "Geçerli Format")}
@@ -155,7 +151,7 @@ export default function RegisterPage() {
               disabled={loading}
             />
             {activeField === "password" && (
-              <div className="mt-2 p-2 bg-light rounded border shadow-sm animate__animated animate__fadeIn">
+              <div className="mt-2 p-2 bg-light rounded border shadow-sm">
                 <p
                   className="fw-bold mb-1"
                   style={{ fontSize: "0.65rem", color: "#666" }}

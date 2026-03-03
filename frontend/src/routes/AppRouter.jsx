@@ -1,6 +1,8 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import PrivateRoute from "./PrivateRoute";
+import MainLayout from "../components/Layout/MainLayout";
 
 import Home from "../pages/Home";
 import Explore from "../pages/Explore";
@@ -13,30 +15,31 @@ import ThreadPage from "../pages/ThreadPage";
 import FollowPage from "../pages/FollowPage";
 
 export default function AppRouter() {
+  const location = useLocation();
   const { user } = useAuth();
+
+  useEffect(() => {
+    const path = location.pathname;
+
+    const titles = {
+      "/home": "Ana Sayfa",
+      "/explore": "Keşfet",
+      "/bookmarks": "Yer İşaretleri",
+      "/settings": "Ayarlar",
+      "/login": "Giriş Yap",
+      "/register": "Kayıt Ol",
+    };
+
+    if (titles[path]) {
+      document.title = `${titles[path]} / ${import.meta.env.VITE_APP_NAME}`;
+    }
+  }, [location.pathname]);
 
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/explore" element={<Explore />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/post/:contentId" element={<ThreadPage type="post" />} />
-      <Route
-        path="/comment/:contentId"
-        element={<ThreadPage type="comment" />}
-      />
       <Route path="/profile/:id" element={<ProfilePage />} />
-      <Route path="/profile/:userId/:type" element={<FollowPage />} />
-
-      <Route
-        path="/bookmarks"
-        element={
-          <PrivateRoute>
-            <BookmarksPage />
-          </PrivateRoute>
-        }
-      />
       <Route
         path="/settings"
         element={
@@ -45,6 +48,25 @@ export default function AppRouter() {
           </PrivateRoute>
         }
       />
+
+      <Route element={<MainLayout />}>
+        <Route path="/home" element={<Home />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/post/:contentId" element={<ThreadPage type="post" />} />
+        <Route
+          path="/comment/:contentId"
+          element={<ThreadPage type="comment" />}
+        />
+        <Route
+          path="/bookmarks"
+          element={
+            <PrivateRoute>
+              <BookmarksPage />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/profile/:userId/:type" element={<FollowPage />} />
+      </Route>
 
       <Route
         path="/"

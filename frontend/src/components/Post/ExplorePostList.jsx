@@ -30,7 +30,7 @@ export default function ExplorePostList() {
   }
 
   return (
-    <div className="mt-3">
+    <div>
       {posts.length > 0 ? (
         posts.map((post) => (
           <PostCard key={post._id} post={post} onUpdate={fetchPosts} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 
@@ -19,10 +19,6 @@ export default function LoginPage() {
     /\.(com|net|org|edu|gov|info|me|com\.tr|org\.tr|edu\.tr)$/i.test(email);
 
   const isPasswordLongEnough = password.length >= 8;
-
-  useEffect(() => {
-    document.title = `Giriş Yap / ${import.meta.env.VITE_APP_NAME}`;
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

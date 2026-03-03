@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { updateUserSettings, deleteUserAccount } from "../api/user.api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -11,10 +11,6 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("appearance");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    document.title = `Ayarlar / ${import.meta.env.VITE_APP_NAME}`;
-  }, []);
 
   const changeTheme = async (newTheme) => {
     if (loading || theme === newTheme) return;
