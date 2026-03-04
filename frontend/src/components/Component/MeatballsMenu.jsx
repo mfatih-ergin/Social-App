@@ -19,6 +19,24 @@ export default function MeatballsMenu({
   const location = useLocation();
   const isDark = theme === "dark";
 
+  const [localIsFollowing, setLocalIsFollowing] = useState(
+    targetUser?.isFollowing,
+  );
+
+  useEffect(() => {
+    setLocalIsFollowing(targetUser?.isFollowing);
+  }, [targetUser?.isFollowing]);
+
+  useEffect(() => {
+    const handleGlobalFollow = (event) => {
+      if (event.detail.userId === targetUser?._id) {
+        setLocalIsFollowing(event.detail.isFollowing);
+      }
+    };
+    window.addEventListener("userFollowed", handleGlobalFollow);
+    return () => window.removeEventListener("userFollowed", handleGlobalFollow);
+  }, [targetUser?._id]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -69,7 +87,6 @@ export default function MeatballsMenu({
                 Düzenle
               </button>
             </li>
-
             <li>
               <button
                 className="dropdown-item text-danger d-flex align-items-center py-2 px-3"
@@ -88,7 +105,7 @@ export default function MeatballsMenu({
           <li>
             <button
               className={`dropdown-item d-flex align-items-center py-2 px-3 ${
-                targetUser?.isFollowing
+                localIsFollowing
                   ? "text-danger"
                   : isDark
                     ? "text-white"
@@ -97,23 +114,20 @@ export default function MeatballsMenu({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-
                 if (!user) {
                   navigate("/login", { state: { from: location } });
                   return;
                 }
-
-                onFollowToggle(targetUser?._id, targetUser?.isFollowing);
+                onFollowToggle(targetUser?._id, localIsFollowing);
+                setLocalIsFollowing(!localIsFollowing);
                 setIsOpen(false);
               }}
             >
               <i
-                className={`bi ${
-                  targetUser?.isFollowing ? "bi-person-x" : "bi-person-plus"
-                } me-3`}
+                className={`bi ${localIsFollowing ? "bi-person-x" : "bi-person-plus"} me-3`}
               ></i>
               <span>
-                {targetUser?.isFollowing
+                {localIsFollowing
                   ? `@${targetUser?.username} Takipten Çık`
                   : `@${targetUser?.username} Takip Et`}
               </span>

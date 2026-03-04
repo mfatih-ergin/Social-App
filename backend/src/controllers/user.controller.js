@@ -418,6 +418,86 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const getUserSuggestions = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+
+    const currentUser = await User.findById(currentUserId).select("following");
+    const excludedIds = [...currentUser.following, currentUserId];
+
+    const suggestions = await User.aggregate([
+      { $match: { _id: { $nin: excludedIds } } },
+      { $sample: { size: 5 } },
+      {
+        $project: {
+          password: 0,
+          email: 0,
+          followers: 0,
+          following: 0,
+          settings: 0,
+        },
+      },
+    ]);
+
+    const formattedSuggestions = suggestions.map((user) => ({
+      ...user,
+      profileImage: user.profileImage
+        ? user.profileImage.startsWith("http")
+          ? user.profileImage
+          : `${baseUrl}${user.profileImage.startsWith("/") ? "" : "/"}${user.profileImage}`
+        : null,
+    }));
+
+    res.json(formattedSuggestions);
+  } catch (error) {
+    console.error("getUserSuggestions Hatası:", error);
+    res.status(500).json({ message: "Öneriler getirilirken bir hata oluştu." });
+  }
+};
+
+const searchUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+    const currentUserId = req.user ? req.user._id : null;
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+
+    if (!query) return res.json([]);
+
+    let searchCriteria = {
+      $or: [
+        { username: { $regex: query, $options: "i" } },
+        { displayName: { $regex: query, $options: "i" } },
+      ],
+    };
+
+    if (currentUserId) {
+      searchCriteria = {
+        $and: [{ _id: { $ne: currentUserId } }, searchCriteria],
+      };
+    }
+
+    const users = await User.find(searchCriteria)
+      .select("username profileImage displayName")
+      .limit(10)
+      .lean();
+
+    const formattedUsers = users.map((user) => ({
+      ...user,
+      profileImage: user.profileImage
+        ? user.profileImage.startsWith("http")
+          ? user.profileImage
+          : `${baseUrl}${user.profileImage.startsWith("/") ? "" : "/"}${user.profileImage}`
+        : null,
+    }));
+
+    res.json(formattedUsers);
+  } catch (error) {
+    console.error("Search Error:", error);
+    res.status(500).json({ message: "Arama sırasında hata oluştu." });
+  }
+};
+
 module.exports = {
   getUserProfile,
   getFollowers,
@@ -428,4 +508,6 @@ module.exports = {
   unfollowUser,
   updateSettings,
   deleteUser,
+  getUserSuggestions,
+  searchUsers,
 };

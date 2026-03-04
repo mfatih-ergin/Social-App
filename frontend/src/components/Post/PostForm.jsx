@@ -52,7 +52,7 @@ export default function PostForm({ onPostCreated }) {
 
   return (
     <div
-      className={`card border-0 border-bottom rounded-0 px-3 py-2 post-form-card ${theme === "dark" ? "dark" : ""}`}
+      className={`card border-0 border-bottom rounded-0 px-3 py-3 post-form-card ${theme === "dark" ? "dark" : ""}`}
     >
       <div className="d-flex">
         <div className="me-3">
@@ -87,7 +87,7 @@ export default function PostForm({ onPostCreated }) {
             <FormImagePreview preview={imagePreview} onRemove={removeImage} />
 
             <div
-              className={`d-flex justify-content-between align-items-center mt-3 pt-2 border-top ${theme === "dark" ? "border-secondary" : ""}`}
+              className={`d-flex justify-content-between align-items-center mt-3 pt-3 border-top ${theme === "dark" ? "border-secondary" : ""}`}
             >
               <div className="d-flex align-items-center">
                 <ImageUploadButton onImageSelect={handleImageSelect} />
@@ -101,7 +101,7 @@ export default function PostForm({ onPostCreated }) {
                 {isSubmitting ? (
                   <span className="spinner-border spinner-border-sm"></span>
                 ) : (
-                  "Paylaş"
+                  "Gönderi Paylaş"
                 )}
               </button>
             </div>
