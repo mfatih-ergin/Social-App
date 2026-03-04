@@ -94,25 +94,11 @@ export default function ProfilePage() {
 
   if (loading)
     return (
-      <div
-        className={`d-flex justify-content-center align-items-center min-vh-100 ${
-          isDark ? "bg-black text-white" : "bg-white text-dark"
-        }`}
-      >
-        <div className="spinner-border text-primary"></div>
+      <div className="p-5 text-center">
+        <div className="spinner-border"></div>
       </div>
     );
-
-  if (error)
-    return (
-      <div
-        className={`d-flex justify-content-center align-items-center min-vh-100 ${
-          isDark ? "bg-black text-white" : "bg-white text-dark"
-        }`}
-      >
-        <div className="alert alert-danger w-50 text-center">{error}</div>
-      </div>
-    );
+  if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
     <div className="profile-page-wrapper">

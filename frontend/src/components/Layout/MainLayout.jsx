@@ -9,7 +9,9 @@ export default function MainLayout() {
   const location = useLocation();
   const isDark = theme === "dark";
 
-  const isProfilePage = location.pathname.includes("/profile");
+  const isMainProfilePage =
+    location.pathname.split("/").length === 3 &&
+    location.pathname.startsWith("/profile");
 
   return (
     <div
@@ -26,7 +28,7 @@ export default function MainLayout() {
               isDark ? "border-secondary" : "border-light"
             }`}
           >
-            {!isProfilePage && <Header />}
+            {!isMainProfilePage && <Header />}
             <Outlet />
           </div>
 
