@@ -39,7 +39,6 @@ export default function AppRouter() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/profile/:id" element={<ProfilePage />} />
       <Route
         path="/settings"
         element={
@@ -65,6 +64,7 @@ export default function AppRouter() {
             </PrivateRoute>
           }
         />
+        <Route path="/profile/:id" element={<ProfilePage />} />
         <Route path="/profile/:userId/:type" element={<FollowPage />} />
       </Route>
 

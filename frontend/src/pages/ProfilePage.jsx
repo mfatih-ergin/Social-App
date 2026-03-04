@@ -7,7 +7,6 @@ import { useTheme } from "../context/ThemeContext";
 import ProfileHeader from "../components/Profile/ProfileHeader";
 import ProfileTabs from "../components/Profile/ProfileTabs";
 import ProfileContent from "../components/Profile/ProfileContent";
-import RightAside from "../components/Layout/RightAside";
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -116,48 +115,29 @@ export default function ProfilePage() {
     );
 
   return (
-    <div
-      className={`container-fluid p-0 ${isDark ? "bg-black text-white" : "bg-white text-dark"}`}
-    >
-      <div className="container-fluid">
-        <div className="row justify-content-center">
-          <div
-            className={`col-12 col-md-8 col-lg-6 border-start border-end p-0 min-vh-100 ${
-              isDark ? "border-secondary" : ""
-            }`}
-            style={{ backgroundColor: "transparent" }}
-          >
-            <ProfileHeader
-              profile={profile}
-              isOwnProfile={isOwnProfile}
-              isFollowing={profile?.isFollowingByMe}
-              handleFollowToggle={handleFollowToggle}
-              btnLoading={btnLoading}
-              onUpdate={() => fetchProfile(true)}
-            />
+    <div className="profile-page-wrapper">
+      <ProfileHeader
+        profile={profile}
+        isOwnProfile={isOwnProfile}
+        isFollowing={profile?.isFollowingByMe}
+        handleFollowToggle={handleFollowToggle}
+        btnLoading={btnLoading}
+        onUpdate={() => fetchProfile(true)}
+      />
 
-            <ProfileTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              isOwnProfile={isOwnProfile}
-            />
+      <ProfileTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isOwnProfile={isOwnProfile}
+      />
 
-            <div className="px-0 py-0">
-              <ProfileContent
-                activeTab={activeTab}
-                id={id}
-                activeCollection={activeCollection}
-                setActiveCollection={setActiveCollection}
-              />
-            </div>
-          </div>
-
-          <div className="col-lg-4 d-none d-lg-block border-start-0">
-            <div className="sticky-top pt-2">
-              <RightAside />
-            </div>
-          </div>
-        </div>
+      <div className="px-0 py-0">
+        <ProfileContent
+          activeTab={activeTab}
+          id={id}
+          activeCollection={activeCollection}
+          setActiveCollection={setActiveCollection}
+        />
       </div>
     </div>
   );

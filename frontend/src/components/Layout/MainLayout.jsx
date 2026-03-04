@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import Sidebar from "./Sidebar/Sidebar";
 import RightAside from "./RightAside";
@@ -6,7 +6,10 @@ import Header from "./Header";
 
 export default function MainLayout() {
   const { theme } = useTheme();
+  const location = useLocation();
   const isDark = theme === "dark";
+
+  const isProfilePage = location.pathname.includes("/profile");
 
   return (
     <div
@@ -23,7 +26,7 @@ export default function MainLayout() {
               isDark ? "border-secondary" : "border-light"
             }`}
           >
-            <Header />
+            {!isProfilePage && <Header />}
             <Outlet />
           </div>
 
