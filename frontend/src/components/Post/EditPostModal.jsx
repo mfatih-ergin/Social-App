@@ -14,6 +14,17 @@ export default function EditPostModal({ post, isOpen, onClose, onSubmit }) {
   const [imageDeleted, setImageDeleted] = useState(false);
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (isOpen && post) {
       setText(post.text || "");
       setImagePreview(post.image || null);

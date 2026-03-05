@@ -24,6 +24,8 @@ export default function Header() {
         showBack: true,
       };
     }
+    if (path.includes("/connect_people"))
+      return { title: "Bağlan", showBack: true };
     return { title: "Detaylar", showBack: true };
   };
 

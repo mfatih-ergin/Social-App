@@ -19,12 +19,22 @@ const formatUserUrls = (user) => {
 
 const getFullUser = async (id) => {
   const user = await User.findById(id)
-    .select("-password")
-    .populate("followers", "username profileImage")
-    .populate("following", "username profileImage")
+    .select("-password -followers -following")
     .lean();
 
-  return formatUserUrls(user);
+  if (!user) return null;
+
+  const userWithCounts = await User.findById(id)
+    .select("followers following")
+    .lean();
+
+  const finalUser = {
+    ...user,
+    followersCount: userWithCounts.followers?.length || 0,
+    followingCount: userWithCounts.following?.length || 0,
+  };
+
+  return formatUserUrls(finalUser);
 };
 
 const getMe = async (req, res) => {

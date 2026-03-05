@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import {
+  getAllSuggestions,
   getUserSuggestions,
   followUser,
   searchUsers,
 } from "../../api/user.api";
 
+import Avatar from "../Component/Avatar";
 import "./RightAside.css";
 
 export default function RightAside() {
@@ -53,6 +55,19 @@ export default function RightAside() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleExternalFollow = (event) => {
+      const { userId } = event.detail;
+      setSuggestions((prev) => prev.filter((u) => u._id !== userId));
+    };
+
+    window.addEventListener("userFollowed", handleExternalFollow);
+
+    return () => {
+      window.removeEventListener("userFollowed", handleExternalFollow);
+    };
   }, []);
 
   const handleFollow = async (e, userId) => {
@@ -177,12 +192,8 @@ export default function RightAside() {
                     }}
                   >
                     <div className="d-flex align-items-center overflow-hidden">
-                      <img
-                        src={user.profileImage || "/default-avatar.png"}
-                        alt={user.username}
-                        className="suggestion-avatar me-2"
-                      />
-                      <div className="d-flex flex-column overflow-hidden suggestion-info">
+                      <Avatar profileImage={user.profileImage} size="40px" />
+                      <div className="d-flex flex-column overflow-hidden suggestion-info ms-2">
                         <span
                           className={`suggestion-name text-truncate ${isDark ? "text-white" : "text-dark"}`}
                         >
@@ -240,12 +251,8 @@ export default function RightAside() {
                       className="suggestion-item text-decoration-none"
                     >
                       <div className="d-flex align-items-center overflow-hidden">
-                        <img
-                          src={user.profileImage || "/default-avatar.png"}
-                          alt={user.username}
-                          className="suggestion-avatar me-2"
-                        />
-                        <div className="d-flex flex-column overflow-hidden suggestion-info">
+                        <Avatar profileImage={user.profileImage} size="40px" />
+                        <div className="d-flex flex-column overflow-hidden suggestion-info ms-2">
                           <span
                             className={`suggestion-name text-truncate ${isDark ? "text-white" : "text-dark"}`}
                           >
@@ -270,7 +277,7 @@ export default function RightAside() {
               </div>
 
               <div
-                onClick={() => navigate("/home")}
+                onClick={() => navigate("/connect_people")}
                 className="show-more-btn"
                 role="button"
               >

@@ -13,6 +13,7 @@ import BookmarksPage from "../pages/BookmarksPage";
 import Settings from "../pages/Settings";
 import ThreadPage from "../pages/ThreadPage";
 import FollowPage from "../pages/FollowPage";
+import ConnectPeople from "../pages/ConnectPeople";
 
 export default function AppRouter() {
   const location = useLocation();
@@ -28,6 +29,7 @@ export default function AppRouter() {
       "/settings": "Ayarlar",
       "/login": "Giriş Yap",
       "/register": "Kayıt Ol",
+      "/connect_people": "Takip Et",
     };
 
     if (titles[path]) {
@@ -56,6 +58,8 @@ export default function AppRouter() {
           path="/comment/:contentId"
           element={<ThreadPage type="comment" />}
         />
+        <Route path="/profile/:id" element={<ProfilePage />} />
+        <Route path="/profile/:userId/:type" element={<FollowPage />} />
         <Route
           path="/bookmarks"
           element={
@@ -64,8 +68,14 @@ export default function AppRouter() {
             </PrivateRoute>
           }
         />
-        <Route path="/profile/:id" element={<ProfilePage />} />
-        <Route path="/profile/:userId/:type" element={<FollowPage />} />
+        <Route
+          path="/connect_people"
+          element={
+            <PrivateRoute>
+              <ConnectPeople />
+            </PrivateRoute>
+          }
+        />
       </Route>
 
       <Route

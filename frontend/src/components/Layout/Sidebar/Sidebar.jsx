@@ -58,6 +58,15 @@ export default function Sidebar() {
             user={user}
           />
 
+          <SidebarItem
+            to="/connect_people"
+            label="Takip Et"
+            icon="bi-person-plus"
+            activeIcon="bi-person-plus-fill"
+            isAuthRequired={true}
+            user={user}
+          />
+
           <SidebarPostButton
             user={user}
             onClick={() => setIsPostModalOpen(true)}

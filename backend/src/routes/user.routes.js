@@ -10,6 +10,7 @@ const {
   unfollowUser,
   updateSettings,
   deleteUser,
+  getAllSuggestions,
   getUserSuggestions,
   searchUsers,
 } = require("../controllers/user.controller");
@@ -17,6 +18,7 @@ const { protect, optional } = require("../middleware/authMiddleware");
 const upload = require("../middleware/multerMiddleware");
 
 router.get("/suggestions", protect, getUserSuggestions);
+router.get("/connect", protect, getAllSuggestions);
 router.get("/search", optional, searchUsers);
 
 router.get("/:id", protect, getUserProfile);

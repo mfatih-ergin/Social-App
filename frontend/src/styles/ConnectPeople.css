@@ -1,0 +1,65 @@
+
+.connect-container {
+    min-height: 100vh;
+}
+
+.connect-dark .border-bottom {
+    border-color: #2f3336 !important;
+}
+
+.user-item {
+    transition: background-color 0.2s;
+    border-bottom: 1px solid #eff3f4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+}
+
+.connect-dark .user-item {
+    border-bottom: 1px solid #2f3336 !important;
+    background-color: transparent;
+}
+
+.user-item-light:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.user-item-dark:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+
+.user-avatar-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #202327;
+}
+
+.follow-btn-main {
+    font-size: 15px;
+    font-weight: 700;
+    padding: 6px 16px;
+    border: none;
+    transition: opacity 0.2s;
+}
+
+.follow-btn-main:hover {
+    opacity: 0.9;
+}
+
+
+.connect-dark .btn-light {
+    background-color: #eff3f4;
+    color: #0f1419;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-truncate {
+    max-width: 100%;
+}

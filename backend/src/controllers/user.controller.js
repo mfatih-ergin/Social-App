@@ -68,6 +68,8 @@ const getFollowers = async (req, res) => {
             ? f.profileImage
             : `${baseUrl}${f.profileImage.startsWith("/") ? "" : "/"}${f.profileImage}`
           : null,
+        followersCount: f.followers?.length || 0,
+        followingCount: f.following?.length || 0,
       }));
 
     res.json(formattedFollowers);
@@ -102,6 +104,8 @@ const getFollowing = async (req, res) => {
             ? f.profileImage
             : `${baseUrl}${f.profileImage.startsWith("/") ? "" : "/"}${f.profileImage}`
           : null,
+        followersCount: f.followers?.length || 0,
+        followingCount: f.following?.length || 0,
       }));
 
     res.json(filteredFollowing);
@@ -418,6 +422,36 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const getAllSuggestions = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+
+    const currentUser = await User.findById(currentUserId).select("following");
+
+    const excludedIds = [...currentUser.following, currentUserId];
+
+    const users = await User.find({ _id: { $nin: excludedIds } })
+      .select("username displayName profileImage bio")
+      .limit(30)
+      .lean();
+
+    const formattedUsers = users.map((user) => ({
+      ...user,
+      profileImage: user.profileImage
+        ? user.profileImage.startsWith("http")
+          ? user.profileImage
+          : `${baseUrl}${user.profileImage.startsWith("/") ? "" : "/"}${user.profileImage}`
+        : null,
+    }));
+
+    res.json(formattedUsers);
+  } catch (error) {
+    console.error("getAllSuggestions Hatası:", error);
+    res.status(500).json({ message: "Kullanıcılar getirilemedi." });
+  }
+};
+
 const getUserSuggestions = async (req, res) => {
   try {
     const currentUserId = req.user._id;
@@ -428,7 +462,7 @@ const getUserSuggestions = async (req, res) => {
 
     const suggestions = await User.aggregate([
       { $match: { _id: { $nin: excludedIds } } },
-      { $sample: { size: 5 } },
+      { $sample: { size: 3 } },
       {
         $project: {
           password: 0,
@@ -508,6 +542,7 @@ module.exports = {
   unfollowUser,
   updateSettings,
   deleteUser,
+  getAllSuggestions,
   getUserSuggestions,
   searchUsers,
 };

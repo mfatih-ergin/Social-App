@@ -24,6 +24,8 @@ export const updateUserSettings = (theme) =>
 export const deleteUserAccount = (userId) =>
   api.delete(`/users/${userId}/delete`);
 
+export const getAllSuggestions = () => api.get("/users/connect");
+
 export const getUserSuggestions = () => api.get("/users/suggestions");
 
 export const searchUsers = (query) => api.get(`/users/search?query=${query}`);
