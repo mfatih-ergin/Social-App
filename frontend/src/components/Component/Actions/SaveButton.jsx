@@ -65,9 +65,11 @@ export default function SaveButton({
           ${isDark ? "dark-theme" : ""} 
           ${loading ? "disabled" : ""}`}
       >
-        <i
-          className={`bi ${isSaved ? "bi-bookmark-fill" : "bi-bookmark"} fs-5`}
-        ></i>
+        <div className="save-icon-wrapper">
+          <i
+            className={`bi ${isSaved ? "bi-bookmark-fill" : "bi-bookmark"} fs-5`}
+          ></i>
+        </div>
       </button>
 
       <SaveActionMenu

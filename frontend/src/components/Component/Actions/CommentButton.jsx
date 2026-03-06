@@ -11,13 +11,13 @@ export default function CommentButton({ commentsCount, onClick }) {
         e.stopPropagation();
         onClick?.();
       }}
-      className={`btn d-flex align-items-center gap-2 border-0 bg-transparent p-0 comment-btn 
+      className={`btn d-flex align-items-center gap-1 border-0 bg-transparent p-0 comment-btn 
         ${theme === "dark" ? "dark-theme" : ""}`}
     >
-      <i className="bi bi-chat fs-4 outline-icon"></i>
-      <i className="bi bi-chat-fill fs-4 fill-icon"></i>
-
-      <span className="fw-bold user-select-none comment-count">
+      <div className="comment-icon-wrapper">
+        <i className="bi bi-chat comment-icon"></i>
+      </div>
+      <span className=" fw-bold user-select-none comment-count">
         {commentsCount || 0}
       </span>
     </button>

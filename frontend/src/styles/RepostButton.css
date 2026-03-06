@@ -3,11 +3,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     color: #0f1419; /* Açık tema varsayılan (Siyahımsı) */
-}
-
-/* Hover Efekti */
-.repost-btn:hover {
-    transform: scale(1.1);
+    gap: 2px !important;
 }
 
 /* --- KOYU TEMA AYARI --- */
@@ -27,10 +23,14 @@
 .repost-btn .icon-wrapper {
     padding: 8px;
     border-radius: 50%;
+    width: 38px; 
+    height: 38px;
+    border-radius: 50%;
     transition: background-color 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .repost-btn:hover .icon-wrapper {

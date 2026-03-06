@@ -32,7 +32,7 @@ export default function RepostButton({
   return (
     <div className={`dropup repost-dropdown`} ref={dropdownRef}>
       <button
-        className={`btn d-flex align-items-center gap-2 border-0 bg-transparent p-0 repost-btn 
+        className={`btn d-flex align-items-center gap-1 border-0 bg-transparent p-0 repost-btn 
           ${isDark ? "dark-theme" : ""} ${isReposted ? "reposted" : ""}`}
         onClick={(e) => {
           e.stopPropagation();

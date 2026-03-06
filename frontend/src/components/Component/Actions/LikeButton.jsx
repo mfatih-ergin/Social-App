@@ -81,7 +81,7 @@ export default function Like({
       type="button"
       disabled={isLoading}
       onClick={handleLikeClick}
-      className={`btn d-flex align-items-center gap-2 border-0 bg-transparent p-0 shadow-none like-btn
+      className={`btn d-flex align-items-center gap-1 border-0 bg-transparent p-0 shadow-none like-btn
         ${isLiked ? "liked" : ""}
         ${theme === "dark" ? "dark-theme" : ""} 
         ${isLoading ? "disabled" : ""}`}

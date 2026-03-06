@@ -1,39 +1,59 @@
-/* CommentButton.css */
-
 .comment-btn {
-  cursor: pointer;
-  transition: all 0.2s ease;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    outline: none !important;
 }
 
-/* İkon Kontrolleri */
-.comment-btn .fill-icon {
-  display: none; /* Varsayılan olarak dolu ikon gizli */
-}
-
-/* Hover Durumu */
-.comment-btn:hover {
-  transform: scale(1.1);
-  color: #1d9bf0 !important;
-}
-
-.comment-btn:hover .outline-icon {
-  display: none; /* Boş ikonu gizle */
-}
-
-.comment-btn:hover .fill-icon {
-  display: inline-block; /* Dolu ikonu göster */
-}
-
-/* --- KOYU TEMA --- */
 .comment-btn.dark-theme {
-  color: #e7e9ea !important; /* Koyu temada yazı ve ikon beyazımsı */
+    color: #e7e9ea !important;
 }
 
-.comment-btn.dark-theme:hover {
-  color: #1d9bf0 !important; /* Koyu temada hover yine mavi */
+.comment-btn:hover,
+.comment-btn:hover .comment-count {
+    color: #1d9bf0 !important;
 }
 
-/* Ufak bir etkileşim animasyonu */
-.comment-btn:active {
-  transform: scale(0.95);
+.comment-btn:hover .comment-icon-wrapper {
+    background-color: rgba(29, 155, 240, 0.1); 
+}
+
+.comment-btn .comment-icon-wrapper {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    transition: all 0.2s ease; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.comment-count {
+    font-size: 0.9rem;
+    font-weight: 500;
+    user-select: none;
+    transition: color 0.2s ease;
+    display: inline-block;
+}
+
+.comment-btn i {
+    font-size: 1.45rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.comment-btn.dark-theme .comment-count {
+     color: #e7e9ea !important;
+}
+
+.comment-btn.dark-theme:hover .comment-count {
+    color: #1d9bf0 !important;
 }
