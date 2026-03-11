@@ -6,7 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 
 import ProfileHeader from "../components/Profile/ProfileHeader";
 import ProfileTabs from "../components/Profile/ProfileTabs";
-import ProfileContent from "../components/Profile/ProfileContent";
+import Content from "../components/Profile/Content";
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -20,7 +20,6 @@ export default function ProfilePage() {
   const [error, setError] = useState(null);
   const [btnLoading, setBtnLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
-  const [activeCollection, setActiveCollection] = useState("Tümü");
 
   const isDark = theme === "dark";
   const isOwnProfile =
@@ -118,12 +117,7 @@ export default function ProfilePage() {
       />
 
       <div className="px-0 py-0">
-        <ProfileContent
-          activeTab={activeTab}
-          id={id}
-          activeCollection={activeCollection}
-          setActiveCollection={setActiveCollection}
-        />
+        <Content activeTab={activeTab} id={id} />
       </div>
     </div>
   );

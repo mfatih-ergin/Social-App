@@ -69,6 +69,14 @@ export default function AppRouter() {
           }
         />
         <Route
+          path="/bookmarks/:collectionName"
+          element={
+            <PrivateRoute>
+              <BookmarksPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/connect_people"
           element={
             <PrivateRoute>

@@ -1,6 +1,6 @@
 import { useTheme } from "../../context/ThemeContext";
 
-export default function ProfileTabs({ activeTab, setActiveTab, isOwnProfile }) {
+export default function ProfileTabs({ activeTab, setActiveTab }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -8,10 +8,6 @@ export default function ProfileTabs({ activeTab, setActiveTab, isOwnProfile }) {
     { id: "posts", label: "Gönderiler" },
     { id: "likes", label: "Beğenilenler" },
   ];
-
-  if (isOwnProfile) {
-    tabs.push({ id: "saved", label: "Kaydedilenler" });
-  }
 
   return (
     <div className={`px-4 border-bottom ${isDark ? "border-secondary" : ""}`}>

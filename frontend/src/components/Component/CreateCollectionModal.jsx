@@ -56,7 +56,7 @@ export default function CreateCollectionModal({ isOpen, onClose, onSuccess }) {
           <div
             className={`modal-header border-bottom ${isDark ? "border-secondary border-opacity-25" : ""}`}
           >
-            <h5 className="modal-title fw-bold">Yeni Klasör Oluştur</h5>
+            <h5 className="modal-title fw-bold">Yeni Koleksiyon Oluştur</h5>
             <button
               type="button"
               className={`btn-close ${isDark ? "btn-close-white" : ""}`}
@@ -66,12 +66,11 @@ export default function CreateCollectionModal({ isOpen, onClose, onSuccess }) {
           <form onSubmit={handleSubmit}>
             <div className="modal-body py-4">
               <label className="small mb-2 fw-bold text-secondary">
-                KLASÖR ADI
+                KOLEKSİYON ADI
               </label>
               <input
                 type="text"
                 className={`form-control border-0 p-3 ${isDark ? "bg-black text-white" : "bg-light text-dark"}`}
-                placeholder="Örn: Yazılım Dünyası..."
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoFocus

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { getUserPosts } from "../../api/user.api";
 import { getLikedContent } from "../../api/like.api";
 import { getSavedContent } from "../../api/save.api";
@@ -6,9 +7,9 @@ import { getCollections } from "../../api/collection.api";
 import { useTheme } from "../../context/ThemeContext";
 import PostCard from "../Post/PostCard";
 import CommentCard from "../Comment/CommentCard";
-import ProfileSavedCollections from "./ProfileSavedCollections";
+import SavedCollections from "./SavedCollections";
 
-export default function ProfileContent({
+export default function Content({
   activeTab,
   id,
   activeCollection = "Tümü",
@@ -18,6 +19,8 @@ export default function ProfileContent({
   const [loading, setLoading] = useState(false);
   const [collections, setCollections] = useState(["Tümü"]);
   const { theme } = useTheme();
+  const navigate = useNavigate();
+  const { collectionName } = useParams();
   const isDark = theme === "dark";
 
   const fetchCollections = useCallback(async () => {
@@ -37,6 +40,7 @@ export default function ProfileContent({
 
   const loadData = useCallback(async () => {
     if (!id || id === "undefined") return;
+    if (activeCollection === "Koleksiyonlar") return;
 
     setLoading(true);
     try {
@@ -77,19 +81,43 @@ export default function ProfileContent({
   useEffect(() => {
     if (activeTab === "saved") {
       fetchCollections();
+
+      if (collectionName) {
+        setActiveCollection(decodeURIComponent(collectionName));
+      } else {
+        if (activeCollection !== "Koleksiyonlar") {
+          setActiveCollection("Tümü");
+        }
+      }
     }
-  }, [activeTab, fetchCollections]);
+  }, [collectionName, activeTab, fetchCollections, setActiveCollection]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
+  const handleCollectionClick = (name) => {
+    setActiveCollection(name);
+    if (name === "Tümü" || name === "Koleksiyonlar") {
+      navigate("/bookmarks");
+    } else {
+      navigate(`/bookmarks/${encodeURIComponent(name)}`);
+    }
+  };
+
+  const cardStyle = {
+    transition: "all 0.2s ease-in-out",
+    cursor: "pointer",
+    borderRadius: "16px",
+    border: isDark ? "1px solid #333" : "1px solid #eee",
+  };
+
   return (
     <div className="d-flex flex-column">
       {activeTab === "saved" && (
-        <ProfileSavedCollections
+        <SavedCollections
           activeCollection={activeCollection}
-          setActiveCollection={setActiveCollection}
+          setActiveCollection={handleCollectionClick}
           collections={collections}
           onRefresh={fetchCollections}
         />
@@ -98,6 +126,47 @@ export default function ProfileContent({
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border spinner-border-sm text-primary"></div>
+        </div>
+      ) : activeTab === "saved" && activeCollection === "Koleksiyonlar" ? (
+        <div className="container-fluid p-3">
+          <div className="row g-3">
+            {collections
+              .filter((c) => (c.name || c) !== "Tümü")
+              .map((col) => {
+                const name = col.name || col;
+                const colId = col._id || col;
+                return (
+                  <div key={colId} className="col-6 col-md-4 col-lg-3">
+                    <div
+                      onClick={() => handleCollectionClick(name)}
+                      className={`card h-100 p-4 text-center shadow-sm ${
+                        isDark ? "bg-dark text-white" : "bg-light text-dark"
+                      } collection-card`}
+                      style={cardStyle}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.transform = "translateY(-5px)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.transform = "translateY(0)")
+                      }
+                    >
+                      <div className="mb-2">
+                        <i className="bi bi-folder-fill text-primary display-6"></i>
+                      </div>
+                      <h6
+                        className="fw-bold mb-1 text-truncate pb-1"
+                        style={{
+                          lineHeight: "1.4",
+                          minHeight: "1.5em",
+                        }}
+                      >
+                        {name}
+                      </h6>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </div>
       ) : data.length > 0 ? (
         data.map((item) => {
@@ -129,7 +198,13 @@ export default function ProfileContent({
           className={`text-center py-5 ${isDark ? "text-secondary" : "text-muted"}`}
         >
           <i
-            className={`bi ${activeTab === "posts" ? "bi-chat-square-text" : activeTab === "likes" ? "bi-heart-break" : "bi-folder2-open"} fs-1`}
+            className={`bi ${
+              activeTab === "posts"
+                ? "bi-chat-square-text"
+                : activeTab === "likes"
+                  ? "bi-heart-break"
+                  : "bi-folder2-open"
+            } fs-1`}
           ></i>
           <p className="mt-2">
             {activeTab === "saved"
