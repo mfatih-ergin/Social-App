@@ -84,7 +84,12 @@ export default function ConnectPeople() {
                   onClick={() => navigate(`/profile/${user._id}`)}
                 >
                   <div className="me-3">
-                    <Avatar profileImage={user.profileImage} size="48px" />
+                    <Avatar
+                      userId={user._id}
+                      profileImage={user.profileImage}
+                      size="48px"
+                      userData={user}
+                    />
                   </div>
 
                   <div className="d-flex flex-column overflow-hidden">

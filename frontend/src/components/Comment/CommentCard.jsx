@@ -200,6 +200,7 @@ export default function CommentCard({
             }
             createdAt={displayData.createdAt}
             formatTime={formatRelativeTime}
+            allUserData={displayData}
           />
           <div onClick={(e) => e.stopPropagation()}>
             <MeatballsMenu

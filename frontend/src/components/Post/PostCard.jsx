@@ -186,6 +186,7 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
             }
             createdAt={displayData.createdAt}
             formatTime={formatRelativeTime}
+            allUserData={displayData}
           />
           <div onClick={(e) => e.stopPropagation()}>
             <MeatballsMenu

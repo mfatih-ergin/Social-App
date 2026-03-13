@@ -39,9 +39,8 @@ export default function MeatballsMenu({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      if (menuRef.current && !menuRef.current.contains(event.target))
         setIsOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -61,9 +60,7 @@ export default function MeatballsMenu({
       </button>
 
       <ul
-        className={`dropdown-menu dropdown-menu-end shadow border-0 p-0 m-0 overflow-hidden ${
-          isDark ? "dropdown-dark" : ""
-        } ${isOpen ? "show" : ""}`}
+        className={`dropdown-menu dropdown-menu-end shadow border-0 p-0 m-0 overflow-hidden ${isDark ? "dropdown-dark" : ""} ${isOpen ? "show" : ""}`}
         style={{
           minWidth: "220px",
           display: isOpen ? "block" : "none",
@@ -83,8 +80,7 @@ export default function MeatballsMenu({
                   setIsOpen(false);
                 }}
               >
-                <i className="bi bi-pencil me-3"></i>
-                Düzenle
+                <i className="bi bi-pencil me-3"></i>Düzenle
               </button>
             </li>
             <li>
@@ -96,21 +92,14 @@ export default function MeatballsMenu({
                   setIsOpen(false);
                 }}
               >
-                <i className="bi bi-trash me-3"></i>
-                Sil
+                <i className="bi bi-trash me-3"></i>Sil
               </button>
             </li>
           </>
         ) : (
           <li>
             <button
-              className={`dropdown-item d-flex align-items-center py-2 px-3 ${
-                localIsFollowing
-                  ? "text-danger"
-                  : isDark
-                    ? "text-white"
-                    : "text-dark"
-              }`}
+              className={`dropdown-item d-flex align-items-center py-2 px-3 ${localIsFollowing ? "text-danger" : isDark ? "text-white" : "text-dark"}`}
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
@@ -118,8 +107,17 @@ export default function MeatballsMenu({
                   navigate("/login", { state: { from: location } });
                   return;
                 }
+
+                const newStatus = !localIsFollowing;
                 onFollowToggle(targetUser?._id, localIsFollowing);
-                setLocalIsFollowing(!localIsFollowing);
+
+                window.dispatchEvent(
+                  new CustomEvent("userFollowed", {
+                    detail: { userId: targetUser?._id, isFollowing: newStatus },
+                  }),
+                );
+
+                setLocalIsFollowing(newStatus);
                 setIsOpen(false);
               }}
             >

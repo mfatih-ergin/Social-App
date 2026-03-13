@@ -1,5 +1,5 @@
 .card-layout {
-  overflow: hidden;
+  overflow: visible;
   transition: background-color 0.2s ease-in-out;
   border-bottom: 1px solid #eff3f4;
   background-color: #ffffff;

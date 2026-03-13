@@ -1,9 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import {
-  getAllSuggestions,
   getUserSuggestions,
   followUser,
   searchUsers,
@@ -72,6 +71,7 @@ export default function RightAside() {
 
   const handleFollow = async (e, userId) => {
     e.preventDefault();
+    e.stopPropagation(); // Satırın tıklanma olayını (navigate) engellemek için
     if (followLoading[userId]) return;
 
     try {
@@ -177,22 +177,25 @@ export default function RightAside() {
                 </div>
               ) : searchResults.length > 0 ? (
                 searchResults.map((user) => (
-                  <Link
+                  <div
                     key={user._id}
-                    to={`/profile/${user._id}`}
-                    className={`suggestion-item text-decoration-none border-bottom ${
+                    className={`suggestion-item border-bottom cursor-pointer ${
                       isDark
                         ? "hover-bg-dark border-secondary"
                         : "hover-bg-light border-light"
                     }`}
                     onClick={() => {
-                      setSearchQuery("");
-                      setSearchResults([]);
-                      setShowResults(false);
+                      navigate(`/profile/${user._id}`);
+                      clearSearch();
                     }}
                   >
-                    <div className="d-flex align-items-center overflow-hidden">
-                      <Avatar profileImage={user.profileImage} size="40px" />
+                    <div className="d-flex align-items-center">
+                      <Avatar
+                        userId={user._id}
+                        profileImage={user.profileImage}
+                        size="40px"
+                        userData={user}
+                      />
                       <div className="d-flex flex-column overflow-hidden suggestion-info ms-2">
                         <span
                           className={`suggestion-name text-truncate ${isDark ? "text-white" : "text-dark"}`}
@@ -201,7 +204,7 @@ export default function RightAside() {
                         </span>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))
               ) : (
                 <div className="p-4 text-center">
@@ -245,13 +248,18 @@ export default function RightAside() {
                   </div>
                 ) : suggestions.length > 0 ? (
                   suggestions.map((user) => (
-                    <Link
+                    <div
                       key={user._id}
-                      to={`/profile/${user._id}`}
-                      className="suggestion-item text-decoration-none"
+                      className="suggestion-item cursor-pointer"
+                      onClick={() => navigate(`/profile/${user._id}`)}
                     >
-                      <div className="d-flex align-items-center overflow-hidden">
-                        <Avatar profileImage={user.profileImage} size="40px" />
+                      <div className="d-flex align-items-center">
+                        <Avatar
+                          userId={user._id}
+                          profileImage={user.profileImage}
+                          size="40px"
+                          userData={user}
+                        />
                         <div className="d-flex flex-column overflow-hidden suggestion-info ms-2">
                           <span
                             className={`suggestion-name text-truncate ${isDark ? "text-white" : "text-dark"}`}
@@ -267,7 +275,7 @@ export default function RightAside() {
                       >
                         {followLoading[user._id] ? "..." : "Takip et"}
                       </button>
-                    </Link>
+                    </div>
                   ))
                 ) : (
                   <p className="px-3 py-4 text-muted small mb-0 text-center">
@@ -306,29 +314,6 @@ export default function RightAside() {
             </div>
           )}
         </div>
-
-        {/* <div
-          className={`mt-3 px-3 aside-footer-text ${isDark ? "aside-footer-text-dark" : ""}`}
-          style={{ fontSize: "13px", lineHeight: "1.5" }}
-        >
-          <div className="d-flex flex-wrap gap-x-3 gap-y-1">
-            <span className="cursor-pointer hover-underline me-2">
-              Hizmet Şartları
-            </span>
-            <span className="cursor-pointer hover-underline me-2">
-              Gizlilik Politikası
-            </span>
-            <span className="cursor-pointer hover-underline me-2">
-              Çerez Politikası
-            </span>
-            <span className="cursor-pointer hover-underline">
-              Erişilebilirlik
-            </span>
-          </div>
-          <div className="mt-2 opacity-75">
-            © 2026 {import.meta.env.VITE_APP_NAME} Corp.
-          </div>
-        </div> */}
       </div>
     </aside>
   );

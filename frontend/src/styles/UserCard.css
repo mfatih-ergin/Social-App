@@ -1,0 +1,42 @@
+.user-card-popover {
+  width: 280px;
+  border-radius: 16px;
+  overflow: visible;
+  transition: all 0.3s ease;
+  border: 1px solid #eff3f4;
+  background-color: #ffffff;
+}
+
+.user-card-popover.dark {
+  background-color: #000000;
+  border: 1px solid #2f3336;
+  color: #e7e9ea;
+}
+
+.user-card-popover .user-bio {
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.user-card-popover .stats-divider {
+  border-top: 1px solid #eff3f4;
+}
+
+.user-card-popover.dark .stats-divider {
+  border-top: 1px solid #2f3336;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.user-card-popover {
+  animation: fadeInScale 0.2s ease-out;
+}

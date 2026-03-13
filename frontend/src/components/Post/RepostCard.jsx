@@ -53,7 +53,16 @@ export default function RepostCard({ post, isComment = false }) {
         isQuote={true}
       >
         <div className="d-flex align-items-center gap-2 mb-2">
-          <Avatar userId={userId} profileImage={profileImage} size="30px" />
+          <Avatar
+            userId={userId}
+            profileImage={profileImage}
+            size="30px"
+            userData={{
+              ...source,
+              username,
+              profileImage,
+            }}
+          />
           <span
             className="fw-bold small text-truncate"
             style={{ maxWidth: "150px", fontSize: "0.85rem" }}

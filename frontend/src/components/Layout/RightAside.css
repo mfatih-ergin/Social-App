@@ -3,6 +3,8 @@
     width: 350px;
     position: sticky;
     top: 10px;
+    overflow: visible !important;
+    z-index: 10;
 }
 
 .search-wrapper {
@@ -27,7 +29,7 @@
 .suggestions-card {
     background-color: #f7f9f9;
     border-radius: 16px;
-    overflow: hidden;
+    overflow: visible !important;
 }
 
 .suggestions-card-dark {
@@ -41,6 +43,11 @@
     padding: 12px 16px;
     text-decoration: none;
     transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.suggestion-list, .suggestion-item {
+    overflow: visible !important;
 }
 
 .suggestion-item:hover {
@@ -131,6 +138,10 @@
     text-decoration: underline;
 }
 
+aside {
+    overflow: visible !important;
+}
+
 .aside-footer-text {
     color: #71767b;
     transition: color 0.2s;
@@ -164,4 +175,15 @@
 
 .search-input:focus::placeholder {
     color: #9ea3a7;
+}
+
+.search-results-dropdown {
+    position: absolute;
+    top: 50px;
+    width: 100%;
+    z-index: 2000;
+    max-height: 350px;
+    overflow-y: auto;
+    background-color: inherit;
+    border: 1px solid #333;
 }

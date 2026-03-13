@@ -21,7 +21,7 @@ router.get("/suggestions", protect, getUserSuggestions);
 router.get("/connect", protect, getAllSuggestions);
 router.get("/search", optional, searchUsers);
 
-router.get("/:id", protect, getUserProfile);
+router.get("/:id", /*protect,*/ getUserProfile);
 router.get("/:userId/userposts", protect, getUserPosts);
 
 router.get("/:userId/followers", protect, getFollowers);
