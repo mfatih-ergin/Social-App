@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import api from "../api/axios";
-
-const AuthContext = createContext();
+import { AuthContext } from "./AuthContextInstance";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -87,11 +86,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth, AuthProvider içerisinde kullanılmalıdır!");
-  }
-  return context;
-};

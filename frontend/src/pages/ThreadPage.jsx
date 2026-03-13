@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPostById } from "../api/post.api";
 import { getCommentById } from "../api/comment.api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import PostCard from "../components/Post/PostCard";
 import CommentCard from "../components/Comment/CommentCard";
 import CommentList from "../components/Comment/CommentList";

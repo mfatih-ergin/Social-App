@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPost } from "../../api/post.api";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../context/ThemeContext";
 import { Link } from "react-router-dom";
 

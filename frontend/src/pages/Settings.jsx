@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { updateUserSettings, deleteUserAccount } from "../api/user.api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import "../styles/Settings.css";

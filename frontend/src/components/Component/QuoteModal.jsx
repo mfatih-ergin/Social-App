@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import Avatar from "../Component/Avatar";
 import FormImagePreview from "../Component/FormImagePreview";
 import ImageUploadButton from "../Component/Actions/ImageUploadButton";

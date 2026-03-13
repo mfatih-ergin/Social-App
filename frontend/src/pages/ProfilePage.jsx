@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getUserProfile, followUser, unfollowUser } from "../api/user.api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../context/ThemeContext";
 
 import ProfileHeader from "../components/Profile/ProfileHeader";

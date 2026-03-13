@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import { formatRelativeTime } from "../Component/DateInfo";
 import Avatar from "../Component/Avatar";
 import FormImagePreview from "../Component/FormImagePreview";

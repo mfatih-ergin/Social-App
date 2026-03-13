@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getHomePosts } from "../api/post.api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import HomePostList from "../components/Post/HomePostList";
 import PostForm from "../components/Post/PostForm";
 import Loading from "../components/Loading";
