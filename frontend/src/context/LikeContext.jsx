@@ -1,6 +1,6 @@
-import React, { createContext, useState, useCallback } from "react";
+import React, { createContext, useState, useCallback, useContext } from "react";
 
-export const LikeContext = createContext(null);
+const LikeContext = createContext(null);
 
 export const LikeProvider = ({ children }) => {
   const [globalLikes, setGlobalLikes] = useState({});
@@ -28,3 +28,5 @@ export const LikeProvider = ({ children }) => {
     </LikeContext.Provider>
   );
 };
+
+export const useLike = () => useContext(LikeContext);

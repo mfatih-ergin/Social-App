@@ -307,7 +307,7 @@ export default function RightAside() {
           )}
         </div>
 
-        <div
+        {/* <div
           className={`mt-3 px-3 aside-footer-text ${isDark ? "aside-footer-text-dark" : ""}`}
           style={{ fontSize: "13px", lineHeight: "1.5" }}
         >
@@ -328,7 +328,7 @@ export default function RightAside() {
           <div className="mt-2 opacity-75">
             © 2026 {import.meta.env.VITE_APP_NAME} Corp.
           </div>
-        </div>
+        </div> */}
       </div>
     </aside>
   );

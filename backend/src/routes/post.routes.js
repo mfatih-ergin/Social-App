@@ -3,8 +3,8 @@ const router = express.Router();
 const {
   createPost,
   updatePost,
-  getPosts,
-  getExplore,
+  getHomePosts,
+  getExplorePosts,
   deletePost,
   getPostById,
   repostContent,
@@ -12,9 +12,9 @@ const {
 const { protect, optional } = require("../middleware/authMiddleware");
 const upload = require("../middleware/multerMiddleware");
 
-router.get("/", protect, getPosts);
-router.get("/home", protect, getPosts);
-router.get("/explore", optional, getExplore);
+router.get("/", protect, getHomePosts);
+router.get("/home", protect, getHomePosts);
+router.get("/explore", optional, getExplorePosts);
 
 router.post("/create", protect, upload.single("image"), createPost);
 router.post("/repost/:id", protect, upload.single("image"), repostContent);

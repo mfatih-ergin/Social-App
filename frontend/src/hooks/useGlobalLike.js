@@ -1,8 +1,7 @@
-import { useContext } from "react";
-import { LikeContext } from "../context/LikeContext";
+import { useLike } from "../context/LikeContext";
 
 export const useGlobalLike = () => {
-  const context = useContext(LikeContext);
+  const context = useLike();
   if (!context) {
     throw new Error("useGlobalLike must be used within a LikeProvider");
   }

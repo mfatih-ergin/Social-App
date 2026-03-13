@@ -246,7 +246,49 @@ const getPosts = async (req, res) => {
   }
 };
 
-const getExplore = async (req, res) => {
+const getHomePosts = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ message: "Yetkisiz erişim" });
+    }
+
+    const user = await User.findById(userId).select("following");
+    const authorIds = [...user.following, userId];
+
+    const userSavesMap = new Map();
+    const userSaves = await Save.find({ user: userId }).lean();
+    userSaves.forEach((s) => {
+      const key = (s.post || s.comment)?.toString();
+      if (key) userSavesMap.set(key, s.collectionIds || [null]);
+    });
+
+    const posts = await Post.find({ user: { $in: authorIds } })
+      .populate("user", "username email profileImage")
+      .populate({
+        path: "parentPost",
+        populate: { path: "user", select: "username profileImage" },
+      })
+      .populate({
+        path: "parentComment",
+        populate: { path: "user", select: "username profileImage" },
+      })
+      .sort({ createdAt: -1 });
+
+    const postsWithInfo = await Promise.all(
+      posts.map((post) =>
+        formatPostData(post, userId.toString(), userSavesMap),
+      ),
+    );
+
+    res.json(postsWithInfo);
+  } catch (error) {
+    console.error("homePosts Hatası:", error);
+    res.status(500).json({ message: "Ana sayfa postları alınamadı" });
+  }
+};
+
+const getExplorePosts = async (req, res) => {
   try {
     const userId = req.user?._id?.toString();
     const userSavesMap = new Map();
@@ -415,8 +457,8 @@ const repostContent = async (req, res) => {
 module.exports = {
   createPost,
   updatePost,
-  getPosts,
-  getExplore,
+  getHomePosts,
+  getExplorePosts,
   deletePost,
   getPostById,
   repostContent,

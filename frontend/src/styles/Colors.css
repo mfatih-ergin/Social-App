@@ -1,0 +1,43 @@
+:root {
+  /* Ana Marka Renkleri */
+  --color-white-main: #e7e9ea;
+
+  /* Buton Renkleri */
+  --color-button-blue-primary: #1d9bf0;
+  --color-button-blue-hover-bg: rgba(29, 155, 240, 0.1);
+  --color-button-blue-hover-bg-dark: rgba(29, 155, 240, 0.2);
+
+  /* Repost (Yeşil) Renkleri */
+  --color-repost-button-primary: #00ba7c;
+  --color-repost-button-hover-bg: rgba(0, 186, 124, 0.1);
+  --color-repost-button-hover-bg-dark: rgba(0, 186, 124, 0.2);
+
+  /* Danger / Silme (Kırmızı) Renkleri */
+  --color-danger: #dc3545;
+  --color-danger-hover-bg: rgba(244, 33, 46, 0.1);
+  --color-danger-active-bg: rgba(220, 53, 69, 0.1);
+
+  /* Light Mode Renkleri */
+  --color-light-bg: #ffffff;
+  --color-light-hover: rgba(0, 0, 0, 0.03);
+  --color-light-text: #0f1419;
+  /*--color-light-text-active: #000000;*/
+  --color-light-border: #eff3f4;
+  --color-light-active: #f8f9fa;
+  --color-light-media-bg: rgba(0, 0, 0, 0.05);
+  --color-shadow-light: rgba(0, 0, 0, 0.15);
+
+  /* Dark Mode Renkleri */
+  --color-dark-bg: #000000;
+  --color-dark-hover: #121212;
+  --color-dark-text: #e7e9ea;
+  --color-dark-text-active: #ffffff;
+  --color-dark-border: #2f3336;
+  --color-dark-hover-border: #3d4144;
+  /* --color-dark-hover: rgba(255, 255, 255, 0.03); */
+
+  /* Dropdown Renkleri */
+  --color-dark-dropdown-border: #2f3336;
+  --color-dark-dropdown-bg: #16181c;
+  --color-light-dropdown-bg: #f8f9fa;
+}
