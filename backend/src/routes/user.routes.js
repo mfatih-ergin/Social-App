@@ -9,6 +9,8 @@ const {
   followUser,
   unfollowUser,
   updateSettings,
+  updateUsername,
+  updatePassword,
   deleteUser,
   getAllSuggestions,
   getUserSuggestions,
@@ -21,12 +23,6 @@ router.get("/suggestions", protect, getUserSuggestions);
 router.get("/connect", protect, getAllSuggestions);
 router.get("/search", optional, searchUsers);
 
-router.get("/:id", /*protect,*/ getUserProfile);
-router.get("/:userId/userposts", protect, getUserPosts);
-
-router.get("/:userId/followers", protect, getFollowers);
-router.get("/:userId/following", protect, getFollowing);
-
 router.put(
   "/settings/profile",
   protect,
@@ -36,9 +32,20 @@ router.put(
   ]),
   updateProfile,
 );
+
+router.put("/settings/update-username", protect, updateUsername);
+router.put("/settings/update-password", protect, updatePassword);
+router.put("/settings", protect, updateSettings);
+
+router.get("/:id", /*protect,*/ getUserProfile);
+router.get("/:userId/userposts", protect, getUserPosts);
+
+router.get("/:userId/followers", protect, getFollowers);
+router.get("/:userId/following", protect, getFollowing);
+
 router.put("/:id/follow", protect, followUser);
 router.put("/:id/unfollow", protect, unfollowUser);
-router.put("/settings", protect, updateSettings);
+
 router.delete("/:id/delete", protect, deleteUser);
 
 module.exports = router;

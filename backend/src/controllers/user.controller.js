@@ -4,6 +4,7 @@ const Save = require("../models/Save");
 const Like = require("../models/Like");
 const path = require("path");
 const fs = require("fs");
+const bcrypt = require("bcryptjs");
 
 const getUserProfile = async (req, res) => {
   try {
@@ -401,6 +402,67 @@ const updateSettings = async (req, res) => {
   }
 };
 
+const updateUsername = async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username)
+      return res.status(400).json({ message: "Kullanıcı adı gerekli." });
+
+    const existingUser = await User.findOne({ username });
+    if (
+      existingUser &&
+      existingUser._id.toString() !== req.user._id.toString()
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Bu kullanıcı adı zaten alınmış." });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: { username } },
+      { new: true },
+    ).select("-password");
+
+    res.json({ message: "Kullanıcı adı güncellendi", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Sunucu hatası oluştu." });
+  }
+};
+
+const updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Tüm alanları doldurun." });
+    }
+
+    const user = await User.findById(req.user._id);
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Mevcut şifreniz hatalı." });
+
+    if (newPassword.length < 8)
+      return res
+        .status(400)
+        .json({ message: "Yeni şifre en az 8 karakter olmalıdır." });
+
+    const isSame = await bcrypt.compare(newPassword, user.password);
+    if (isSame)
+      return res
+        .status(400)
+        .json({ message: "Yeni şifre eskisiyle aynı olamaz." });
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ message: "Şifreniz başarıyla değiştirildi." });
+  } catch (error) {
+    res.status(500).json({ message: "Şifre güncellenirken hata oluştu." });
+  }
+};
+
 const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -541,6 +603,8 @@ module.exports = {
   followUser,
   unfollowUser,
   updateSettings,
+  updateUsername,
+  updatePassword,
   deleteUser,
   getAllSuggestions,
   getUserSuggestions,

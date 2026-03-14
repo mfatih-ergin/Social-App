@@ -12,6 +12,11 @@ export const updateProfile = (formData) =>
     },
   });
 
+export const updateUsername = (data) =>
+  api.put("/users/settings/update-username", data);
+export const updatePassword = (data) =>
+  api.put("/users/settings/update-password", data);
+
 export const followUser = (id) => api.put(`/users/${id}/follow`);
 
 export const unfollowUser = (id) => api.put(`/users/${id}/unfollow`);

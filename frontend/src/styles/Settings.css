@@ -1,110 +1,159 @@
 /* Settings.css */
 
-/* Genel Konteyner */
-.container {
-  max-width: 1140px;
+/* 1. ANA SARICI */
+.settings-page-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
 }
 
-/* Sol Menü (Sidebar) */
-.sidebar-link {
-  border-radius: 12px !important;
-  margin-bottom: 5px;
-  padding: 1rem 1.25rem !important; /* Daha büyük tıklama alanı */
-  transition: all 0.25s ease !important;
+.settings-layout-container {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  background-color: transparent;
+  border-right: 1px solid rgba(128, 128, 128, 0.2);
 }
 
-.list-group-item:hover:not(.active) {
-  background-color: rgba(0, 0, 0, 0.04) !important;
-  transform: translateX(5px); /* Hover efekti */
+/* 2. SOL PANEL */
+.settings-sidebar-nav {
+  width: 420px;
+  border-right: 1px solid rgba(128, 128, 128, 0.2);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
-.bg-dark .list-group-item:hover:not(.active) {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+/* 3. SAĞ PANEL */
+.settings-detail-content {
+  flex-grow: 1;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.list-group-item.active {
-  font-weight: 600;
-  background-color: #1d9bf0 !important;
-  color: white !important;
+.settings-detail-content::-webkit-scrollbar { display: none; }
+
+/* 4. HEADERLAR */
+.settings-main-header, 
+.detail-header {
+  padding: 24px 16px 12px 16px !important;
+  min-height: 95px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
 }
 
-/* Kartlar */
-.card {
-  border-radius: 20px;
+.invisible-spacer { opacity: 0; user-select: none; pointer-events: none; }
+
+.detail-header p, .settings-main-header p {
+  line-height: 1.25;
+  margin-top: 4px !important;
 }
 
-.bg-white {
-  border: 1px solid #eff3f4 !important;
+.back-header {
+  flex-direction: row !important;
+  gap: 20px;
+  justify-content: flex-start !important;
 }
 
-.bg-dark {
-  background-color: #000000 !important;
-  border: 1px solid #2f3336 !important;
+.back-icon-wrapper {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: -8px; margin-top: -4px;
 }
 
-/* Tema Kartları */
-.theme-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: rgba(0, 0, 0, 0.02);
+.back-icon-wrapper:hover { background-color: rgba(128, 128, 128, 0.15); }
+
+/* 5. ÖZEL INPUT GRUBU */
+.input-group-custom {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 4px;
+  padding: 0 12px;
+  transition: border-color 0.2s;
 }
 
-.theme-card:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  transform: translateY(-4px);
+.input-group-custom:focus-within {
+  border-color: #1d9bf0;
+  box-shadow: 0 0 0 1px #1d9bf0;
+}
+
+.input-group-addon {
+  font-size: 1rem;
+  padding-right: 4px;
+}
+
+.custom-settings-input {
+  flex: 1;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: inherit !important;
+  padding: 12px 4px !important;
+}
+
+.custom-settings-input-standalone {
+  width: 100%;
+  background: transparent !important;
+  border: 1px solid rgba(128, 128, 128, 0.3) !important;
+  border-radius: 4px;
+  padding: 12px !important;
+  color: inherit !important;
+  outline: none !important;
+}
+
+.custom-settings-input-standalone:focus {
   border-color: #1d9bf0 !important;
 }
 
-.bg-dark .theme-card {
-  background-color: #16181c;
+/* 6. DİĞER ÖĞELER */
+.nav-item-row {
+  padding: 16px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer; transition: 0.2s; font-weight: 500;
 }
 
-.bg-dark .theme-card:hover {
-  background-color: #1d1f23;
+.nav-item-row.active {
+  background-color: rgba(29, 155, 240, 0.1);
+  border-right: 2px solid #1d9bf0;
+  color: #1d9bf0;
 }
 
-.theme-card.border-primary {
-  background-color: rgba(29, 155, 240, 0.05) !important;
+.settings-clickable-row {
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; border-bottom: 1px solid rgba(128, 128, 128, 0.1);
 }
 
-/* Animasyonlar */
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out;
+.theme-card-box {
+  padding: 24px; text-align: center; border-radius: 16px;
+  cursor: pointer; background-color: rgba(128, 128, 128, 0.03);
+  border: 2px solid transparent !important;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.theme-card-box.active {
+  border-color: #1d9bf0 !important;
+  background-color: rgba(29, 155, 240, 0.1);
 }
 
-.spin {
-  display: inline-block;
-  animation: spin 1s linear infinite;
+.dark-theme { background-color: #000; color: #fff; }
+.light-theme { background-color: #fff; color: #000; }
+
+.animate-fade-in { animation: slideIn 0.2s ease-out; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(15px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Mobil Uyumluluk */
-@media (max-width: 768px) {
-  .list-group {
-    flex-direction: row;
-    margin-bottom: 1rem;
-    overflow-x: auto;
-    padding-bottom: 5px;
-  }
-  
-  .sidebar-link {
-    white-space: nowrap;
-    text-align: center;
-    flex: 1;
-    margin-bottom: 0;
-    margin-right: 8px;
-    padding: 0.75rem !important;
-  }
-
-  .list-group-item:hover:not(.active) {
-    transform: none;
-  }
+/* Chrome Autofill Fix */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #000 inset !important;
+  -webkit-text-fill-color: #fff !important;
 }
