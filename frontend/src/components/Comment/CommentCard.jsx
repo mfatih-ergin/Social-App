@@ -12,15 +12,15 @@ import {
 import { repostContent } from "../../api/post.api";
 import { followUser } from "../../api/user.api";
 
-import CardLayout from "../Layout/CardLayout";
+import CardLayout from "../Layout/CardLayout/CardLayout";
 import ContentActions from "../Component/Actions/ContentActions";
 import MeatballsMenu from "../Component/MeatballsMenu";
 import UserInfo from "../Component/UserInfo";
 import PostContent from "../Component/PostContent";
-import CommentModal from "../Comment/CommentModal";
+import CommentModal from "./CommentModal/CommentModal";
 import QuoteModal from "../Component/QuoteModal";
-import EditPostModal from "../Post/EditPostModal";
-import RepostCard from "../Post/RepostCard";
+import EditPostModal from "../Post/EditPostModal/EditPostModal";
+import RepostCard from "../Post/RepostCard/RepostCard";
 
 export default function CommentCard({
   comment,

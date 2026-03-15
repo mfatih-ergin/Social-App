@@ -1,5 +1,5 @@
-import { useTheme } from "../../../context/ThemeContext";
-import "../../../styles/CommentButton.css";
+import { useTheme } from "../../../../context/ThemeContext";
+import "./CommentButton.css";
 
 export default function CommentButton({ commentsCount, onClick }) {
   const { theme } = useTheme();

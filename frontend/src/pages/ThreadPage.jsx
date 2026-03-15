@@ -7,7 +7,7 @@ import PostCard from "../components/Post/PostCard";
 import CommentCard from "../components/Comment/CommentCard";
 import CommentList from "../components/Comment/CommentList";
 import { useTheme } from "../context/ThemeContext";
-import Loading from "../components/Loading";
+import Loading from "../components/Component/Loading";
 
 export default function PostPage({ type = "post" }) {
   const { contentId } = useParams();

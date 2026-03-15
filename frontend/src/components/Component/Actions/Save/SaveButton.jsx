@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../../context/ThemeContext";
-import { useAuth } from "../../../hooks/useAuth";
-import { toggleSaveApi } from "../../../api/save.api";
+import { useTheme } from "../../../../context/ThemeContext";
+import { useAuth } from "../../../../hooks/useAuth";
+import { toggleSaveApi } from "../../../../api/save.api";
 import SaveActionMenu from "./SaveActionMenu";
-import "../../../styles/SaveButton.css";
+import "./SaveButton.css";
 
 export default function SaveButton({
   contentId,

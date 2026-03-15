@@ -7,7 +7,6 @@ export default function SavedCollections({
   setActiveCollection,
   onRefresh,
 }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
 

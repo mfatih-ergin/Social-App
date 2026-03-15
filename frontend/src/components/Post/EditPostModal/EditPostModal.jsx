@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
-import FormImagePreview from "../Component/FormImagePreview";
-import ImageUploadButton from "../Component/Actions/ImageUploadButton";
+import { useTheme } from "../../../context/ThemeContext";
+import FormImagePreview from "../../Component/FormImagePreview";
+import ImageUploadButton from "../../Component/Actions/ImageUpload/ImageUploadButton";
 
 export default function EditPostModal({ post, isOpen, onClose, onSubmit }) {
   const [text, setText] = useState("");

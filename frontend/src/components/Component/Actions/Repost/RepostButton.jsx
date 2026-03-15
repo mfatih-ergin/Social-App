@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useTheme } from "../../../context/ThemeContext";
-import "../../../styles/RepostButton.css";
+import { useTheme } from "../../../../context/ThemeContext";
+import "./RepostButton.css";
 
 export default function RepostButton({
   repostsCount,

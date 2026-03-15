@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../context/ThemeContext";
-import { updateProfile } from "../../api/user.api";
-import api from "../../api/axios";
-import "../../styles/EditProfileModal.css";
+import { useAuth } from "../../../hooks/useAuth";
+import { useTheme } from "../../../context/ThemeContext";
+import { updateProfile } from "../../../api/user.api";
+import api from "../../../api/axios";
+import "./EditProfileModal.css";
 
 export default function EditProfileModal({ isOpen, onClose, onUpdate }) {
   const { user, setUser } = useAuth();

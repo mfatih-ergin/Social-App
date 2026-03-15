@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
-import { formatRelativeTime } from "../Component/DateInfo";
-import Avatar from "../Component/Avatar";
-import CardLayout from "../Layout/CardLayout";
-import "../../styles/RepostCard.css";
+import { useTheme } from "../../../context/ThemeContext";
+import { formatRelativeTime } from "../../Component/DateInfo";
+import Avatar from "../../Component/Avatar";
+import CardLayout from "../../Layout/CardLayout/CardLayout";
+import "./RepostCard.css";
 
 export default function RepostCard({ post, isComment = false }) {
   const { theme } = useTheme();

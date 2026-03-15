@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { getExplorePosts } from "../../api/post.api";
 import { useTheme } from "../../context/ThemeContext";
-import PostCard from "./PostCard";
-import Loading from "../Loading";
+import PostCard from "../Post/PostCard";
+import Loading from "../Component/Loading";
 
 export default function ExplorePostList() {
   const [posts, setPosts] = useState([]);

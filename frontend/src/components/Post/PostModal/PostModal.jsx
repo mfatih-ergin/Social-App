@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import ReactDOM from "react-dom";
-import { useTheme } from "../../context/ThemeContext";
-import PostForm from "./PostForm";
-import "../../styles/PostModal.css";
+import { useTheme } from "../../../context/ThemeContext";
+import PostForm from "../PostForm/PostForm";
+import "./PostModal.css";
 
 export default function PostModal({ isOpen, onClose, onPostCreated }) {
   const { theme } = useTheme();

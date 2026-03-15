@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
-import EditProfileModal from "./EditProfileModal";
+import EditProfileModal from "./EditProfileModal/EditProfileModal";
 
 export default function ProfileHeader({
   profile,

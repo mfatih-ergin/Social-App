@@ -7,15 +7,15 @@ import { useTheme } from "../../context/ThemeContext";
 import { formatRelativeTime } from "../Component/DateInfo";
 import { useAuth } from "../../hooks/useAuth";
 
-import CardLayout from "../Layout/CardLayout";
+import CardLayout from "../Layout/CardLayout/CardLayout";
 import ContentActions from "../Component/Actions/ContentActions";
 import MeatballsMenu from "../Component/MeatballsMenu";
 import UserInfo from "../Component/UserInfo";
 import PostContent from "../Component/PostContent";
-import CommentModal from "../Comment/CommentModal";
+import CommentModal from "../Comment/CommentModal/CommentModal";
 import QuoteModal from "../Component/QuoteModal";
-import EditPostModal from "../Post/EditPostModal";
-import RepostCard from "./RepostCard";
+import EditPostModal from "../Post/EditPostModal/EditPostModal";
+import RepostCard from "./RepostCard/RepostCard";
 
 export default function PostCard({ post, onUpdate, isDetailView = false }) {
   const { user } = useAuth();

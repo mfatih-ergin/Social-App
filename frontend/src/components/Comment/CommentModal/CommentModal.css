@@ -22,7 +22,6 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-/* Tema Arka Planları */
 .comment-modal-content.bg-black {
   background-color: #000000 !important;
   border: 1px solid #333639;
@@ -33,7 +32,6 @@
   border: 1px solid #cfd9de;
 }
 
-/* X Tarzı Dikey Bağlantı Çizgisi */
 .reply-line {
   width: 2px;
   background-color: #333639;
@@ -50,11 +48,14 @@
   background-color: #cfd9de;
 }
 
+.comment-modal-overlay.dark textarea::placeholder {
+  color: #71767b !important;
+}
+
 .hover-underline:hover {
   text-decoration: none !important;
 }
 
-/* Yanıtlanan Postun Görseli */
 .modal-post-image-container {
   max-width: 100%;
   max-height: 250px;

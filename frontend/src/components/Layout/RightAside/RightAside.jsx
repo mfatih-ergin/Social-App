@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
-import { useAuth } from "../../hooks/useAuth";
+import { useTheme } from "../../../context/ThemeContext";
+import { useAuth } from "../../../hooks/useAuth";
 import {
   getUserSuggestions,
   followUser,
   searchUsers,
-} from "../../api/user.api";
+} from "../../../api/user.api";
 
-import Avatar from "../Component/Avatar";
+import Avatar from "../../Component/Avatar";
 import "./RightAside.css";
 
 export default function RightAside() {

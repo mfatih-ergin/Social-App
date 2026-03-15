@@ -1,4 +1,4 @@
-import PostCard from "./PostCard";
+import PostCard from "../Post/PostCard";
 import { useTheme } from "../../context/ThemeContext";
 
 export default function HomePostList({ posts, fetchPosts }) {

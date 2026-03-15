@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
-import { useAuth } from "../../hooks/useAuth";
-import { formatRelativeTime } from "../Component/DateInfo";
-import Avatar from "../Component/Avatar";
-import FormImagePreview from "../Component/FormImagePreview";
-import ImageUploadButton from "../Component/Actions/ImageUploadButton";
-import "../../styles/CommentModal.css";
+import { useTheme } from "../../../context/ThemeContext";
+import { useAuth } from "../../../hooks/useAuth";
+import { formatRelativeTime } from "../../Component/DateInfo";
+import Avatar from "../../Component/Avatar";
+import FormImagePreview from "../../Component/FormImagePreview";
+import ImageUploadButton from "../../Component/Actions/ImageUpload/ImageUploadButton";
+import "./CommentModal.css";
 
 export default function CommentModal({ post, isOpen, onClose, onSubmit }) {
   const { theme } = useTheme();
@@ -125,7 +125,7 @@ export default function CommentModal({ post, isOpen, onClose, onSubmit }) {
             </div>
             <div className="w-100">
               <textarea
-                className={`form-control border-0 shadow-none bg-transparent fs-5 p-0 pt-1 ${isDark ? "text-white" : ""}`}
+                className={`form-control border-0 shadow-none bg-transparent fs-5 p-0 pt-1 ${isDark ? "text-white placeholder-dark-mode" : "text-dark"}`}
                 placeholder="Yanıtını gönder"
                 rows="3"
                 value={commentText}

@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { createPost } from "../../api/post.api";
-import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../context/ThemeContext";
+import { createPost } from "../../../api/post.api";
+import { useAuth } from "../../../hooks/useAuth";
+import { useTheme } from "../../../context/ThemeContext";
 import { Link } from "react-router-dom";
 
-import FormImagePreview from "../Component/FormImagePreview";
-import Avatar from "../Component/Avatar";
-import ImageUploadButton from "../Component/Actions/ImageUploadButton";
+import FormImagePreview from "../../Component/FormImagePreview";
+import Avatar from "../../Component/Avatar";
+import ImageUploadButton from "../../Component/Actions/ImageUpload/ImageUploadButton";
 
-import "../../styles/PostForm.css";
+import "./PostForm.css";
 
 export default function PostForm({ onPostCreated }) {
   const [text, setText] = useState("");

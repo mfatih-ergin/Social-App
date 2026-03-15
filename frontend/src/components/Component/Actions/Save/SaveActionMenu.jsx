@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
-import { getCollections } from "../../../api/collection.api";
-import { useTheme } from "../../../context/ThemeContext";
-import "../../../styles/SaveActionMenu.css";
+import { getCollections } from "../../../../api/collection.api";
+import { useTheme } from "../../../../context/ThemeContext";
+import "./SaveActionMenu.css";
 
 export default function SaveActionMenu({
   isOpen,

@@ -3,7 +3,7 @@ import { getCommentsByPostId, getReplies } from "../../api/comment.api";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import CommentCard from "./CommentCard";
-import Loading from "../Loading";
+import Loading from "../Component/Loading";
 
 export default function CommentList({
   postId,

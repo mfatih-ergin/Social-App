@@ -3,7 +3,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../context/ThemeContext";
 import Avatar from "./Avatar";
 import api from "../../api/axios";
-import "../../styles/UserCard.css";
+import "./UserCard.css";
 
 export default function UserCard({ userId, initialData }) {
   const { user: currentUser } = useAuth();

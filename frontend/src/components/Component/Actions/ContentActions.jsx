@@ -1,7 +1,7 @@
-import Like from "./LikeButton";
-import CommentButton from "./CommentButton";
-import SaveButton from "./SaveButton";
-import RepostButton from "./RepostButton";
+import Like from "./Like/LikeButton";
+import CommentButton from "./Comment/CommentButton";
+import SaveButton from "./Save/SaveButton";
+import RepostButton from "./Repost/RepostButton";
 
 export default function ContentActions({
   id,

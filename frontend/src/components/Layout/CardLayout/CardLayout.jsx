@@ -1,5 +1,5 @@
 import React from "react";
-import "../../styles/CardLayout.css";
+import "./CardLayout.css";
 
 export default function CardLayout({
   children,

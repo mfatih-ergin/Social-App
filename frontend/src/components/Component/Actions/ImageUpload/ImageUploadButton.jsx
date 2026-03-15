@@ -1,6 +1,6 @@
 import { useRef } from "react";
-import { useTheme } from "../../../context/ThemeContext";
-import "../../../styles/ImageUploadButton.css";
+import { useTheme } from "../../../../context/ThemeContext";
+import "./ImageUploadButton.css";
 
 export default function ImageUploadButton({ onImageSelect }) {
   const fileInputRef = useRef(null);

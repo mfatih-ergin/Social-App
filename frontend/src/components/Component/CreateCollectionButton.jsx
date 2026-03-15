@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import CreateCollectionModal from "./CreateCollectionModal";
 import { useTheme } from "../../context/ThemeContext";
-import "../../styles/CreateCollectionButton.css";
+import "./CreateCollectionButton.css";
 
 export default function CreateCollectionButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);

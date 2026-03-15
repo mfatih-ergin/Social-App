@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import Sidebar from "./Sidebar/Sidebar";
-import RightAside from "./RightAside";
+import RightAside from "./RightAside/RightAside";
 import Header from "./Header";
 
 export default function MainLayout() {

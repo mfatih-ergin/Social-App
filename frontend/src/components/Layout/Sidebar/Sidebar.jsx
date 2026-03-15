@@ -6,7 +6,7 @@ import SidebarLogo from "./SidebarLogo";
 import SidebarItem from "./SidebarItem";
 import SidebarPostButton from "./SidebarPostButton";
 import SidebarProfile from "./SidebarProfile";
-import PostModal from "../../Post/PostModal";
+import PostModal from "../../Post/PostModal/PostModal";
 
 import "./Sidebar.css";
 

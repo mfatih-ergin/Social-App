@@ -64,6 +64,10 @@
   display: none;
 }
 
+.quote-modal-overlay.dark textarea::placeholder {
+  color: #71767b !important;
+}
+
 @media (max-width: 576px) {
   .quote-modal-overlay { padding-top: 0; }
   .quote-modal-content { height: 100vh; border-radius: 0; }

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../../hooks/useAuth";
-import { useTheme } from "../../../context/ThemeContext";
-import { useGlobalLike } from "../../../hooks/useGlobalLike";
-import { toggleLike } from "../../../api/like.api";
+import { useAuth } from "../../../../hooks/useAuth";
+import { useTheme } from "../../../../context/ThemeContext";
+import { useGlobalLike } from "../../../../hooks/useGlobalLike";
+import { toggleLike } from "../../../../api/like.api";
 
-import "../../../styles/LikeButton.css";
+import "./LikeButton.css";
 
 export default function Like({
   id,

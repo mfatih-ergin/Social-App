@@ -129,44 +129,60 @@ export default function Content({
         </div>
       ) : activeTab === "saved" && activeCollection === "Koleksiyonlar" ? (
         <div className="container-fluid p-3">
-          <div className="row g-3">
-            {collections
-              .filter((c) => (c.name || c) !== "Tümü")
-              .map((col) => {
-                const name = col.name || col;
-                const colId = col._id || col;
-                return (
-                  <div key={colId} className="col-6 col-md-4 col-lg-3">
-                    <div
-                      onClick={() => handleCollectionClick(name)}
-                      className={`card h-100 p-4 text-center shadow-sm ${
-                        isDark ? "bg-dark text-white" : "bg-light text-dark"
-                      } collection-card`}
-                      style={cardStyle}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.transform = "translateY(-5px)")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.transform = "translateY(0)")
-                      }
-                    >
-                      <div className="mb-2">
-                        <i className="bi bi-folder-fill text-primary display-6"></i>
-                      </div>
-                      <h6
-                        className="fw-bold mb-1 text-truncate pb-1"
-                        style={{
-                          lineHeight: "1.4",
-                          minHeight: "1.5em",
-                        }}
+          {/* KRİTİK NOKTA: Koleksiyon dizisinde sadece "Tümü" varsa (uzunluk 1 ise) uyarıyı bas */}
+          {collections.length <= 1 ? (
+            <div className="text-center py-5 animate-fade-in">
+              <div className="mb-3">
+                <i
+                  className={`bi bi-folder-plus fs-1 ${isDark ? "text-secondary" : "text-muted"}`}
+                  style={{ opacity: 0.5 }}
+                ></i>
+              </div>
+              <h5 className={`fw-bold ${isDark ? "text-white" : "text-dark"}`}>
+                Henüz koleksiyon yok.
+              </h5>
+              <p
+                className="text-secondary small mx-auto"
+                style={{ maxWidth: "300px" }}
+              >
+                Yeni koleksiyon oluşturun ve gönderileri kaydedin.
+              </p>
+            </div>
+          ) : (
+            /* Eğer koleksiyon varsa grid yapısını göster */
+            <div className="row g-3">
+              {collections
+                .filter((c) => (c.name || c) !== "Tümü")
+                .map((col) => {
+                  const name = col.name || col;
+                  const colId = col._id || col;
+                  return (
+                    <div key={colId} className="col-6 col-md-4 col-lg-3">
+                      <div
+                        onClick={() => handleCollectionClick(name)}
+                        className={`card h-100 p-4 text-center shadow-sm ${
+                          isDark ? "bg-dark text-white" : "bg-light text-dark"
+                        } collection-card`}
+                        style={cardStyle}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.transform = "translateY(-5px)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.transform = "translateY(0)")
+                        }
                       >
-                        {name}
-                      </h6>
+                        <div className="mb-2">
+                          <i className="bi bi-folder-fill text-primary display-6"></i>
+                        </div>
+                        <h6 className="fw-bold mb-1 text-truncate pb-1">
+                          {name}
+                        </h6>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-          </div>
+                  );
+                })}
+            </div>
+          )}
         </div>
       ) : data.length > 0 ? (
         data.map((item) => {

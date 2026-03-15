@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getFollowers, getFollowing } from "../../api/user.api";
 import { useAuth } from "../../hooks/useAuth";
 import Avatar from "../Component/Avatar";
-import Loading from "../Loading";
+import Loading from "../Component/Loading";
 import FollowButton from "../Component/FollowButton";
 
 export default function FollowList({ userId, type }) {

@@ -1,4 +1,4 @@
-import ExplorePostList from "../components/Post/ExplorePostList";
+import ExplorePostList from "../components/Explore/ExplorePostList";
 
 export default function Explore() {
   return (

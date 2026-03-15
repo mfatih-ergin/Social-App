@@ -3,9 +3,9 @@ import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import Avatar from "../Component/Avatar";
 import FormImagePreview from "../Component/FormImagePreview";
-import ImageUploadButton from "../Component/Actions/ImageUploadButton";
-import RepostCard from "../Post/RepostCard";
-import "../../styles/QuoteModal.css";
+import ImageUploadButton from "./Actions/ImageUpload/ImageUploadButton";
+import RepostCard from "../Post/RepostCard/RepostCard";
+import "./QuoteModal.css";
 
 export default function QuoteModal({ post, isOpen, onClose, onSubmit }) {
   const { theme } = useTheme();
@@ -60,7 +60,11 @@ export default function QuoteModal({ post, isOpen, onClose, onSubmit }) {
             className={`btn-close ${isDark ? "btn-close-white" : ""}`}
             onClick={onClose}
           ></button>
-          <span className="fw-bold ms-4 fs-5">Alıntıla</span>
+          <span
+            className={`fw-bold ms-4 fs-5 ${isDark ? "text-white" : "text-dark"}`}
+          >
+            Alıntıla
+          </span>
         </div>
 
         <div className="p-3">

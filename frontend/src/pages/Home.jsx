@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { getHomePosts } from "../api/post.api";
 import { useAuth } from "../hooks/useAuth";
-import HomePostList from "../components/Post/HomePostList";
-import PostForm from "../components/Post/PostForm";
-import Loading from "../components/Loading";
+import HomePostList from "../components/Home/HomePostList";
+import PostForm from "../components/Post/PostForm/PostForm";
+import Loading from "../components/Component/Loading";
 
 export default function Home() {
   const [posts, setPosts] = useState([]);

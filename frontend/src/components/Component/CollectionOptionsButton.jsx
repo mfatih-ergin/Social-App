@@ -1,6 +1,6 @@
 import React from "react";
 import { useTheme } from "../../context/ThemeContext";
-import "../../styles/CreateCollectionButton.css";
+import "./CreateCollectionButton.css";
 
 export default function CollectionOptionsButton({ onDelete }) {
   const { theme } = useTheme();
