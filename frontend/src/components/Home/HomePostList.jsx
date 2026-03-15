@@ -13,13 +13,13 @@ export default function HomePostList({ posts, fetchPosts }) {
         ))
       ) : (
         <div
-          className={`text-center py-5 rounded border ${
-            isDark
-              ? "text-secondary bg-dark border-secondary opacity-50"
-              : "text-muted bg-light"
-          }`}
+          className={`text-center py-5 ${isDark ? "text-secondary" : "text-muted"}`}
         >
-          <p className="mb-0">Henüz hiç gönderi yok.</p>
+          <p className="mb-0">
+            Henüz hiç gönderi yok.
+            <br />
+            Gönderi paylaşabilir ya da kullanıcıları takip edebilirsiniz.
+          </p>
         </div>
       )}
     </div>

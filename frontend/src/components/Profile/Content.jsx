@@ -129,7 +129,6 @@ export default function Content({
         </div>
       ) : activeTab === "saved" && activeCollection === "Koleksiyonlar" ? (
         <div className="container-fluid p-3">
-          {/* KRİTİK NOKTA: Koleksiyon dizisinde sadece "Tümü" varsa (uzunluk 1 ise) uyarıyı bas */}
           {collections.length <= 1 ? (
             <div className="text-center py-5 animate-fade-in">
               <div className="mb-3">
@@ -149,7 +148,6 @@ export default function Content({
               </p>
             </div>
           ) : (
-            /* Eğer koleksiyon varsa grid yapısını göster */
             <div className="row g-3">
               {collections
                 .filter((c) => (c.name || c) !== "Tümü")
