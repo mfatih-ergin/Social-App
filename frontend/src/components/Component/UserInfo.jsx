@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Avatar from "./Avatar";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 
 export default function UserInfo({
   userId,

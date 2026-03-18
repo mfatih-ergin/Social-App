@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { getCollections } from "../../../../api/collection.api";
-import { useTheme } from "../../../../context/ThemeContext";
+import { useTheme } from "../../../../hooks/useTheme";
 import "./SaveActionMenu.css";
 
 export default function SaveActionMenu({

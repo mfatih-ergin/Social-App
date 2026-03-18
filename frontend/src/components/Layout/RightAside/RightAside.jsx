@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../hooks/useTheme";
 import { useAuth } from "../../../hooks/useAuth";
 import {
   getUserSuggestions,
@@ -71,7 +71,7 @@ export default function RightAside() {
 
   const handleFollow = async (e, userId) => {
     e.preventDefault();
-    e.stopPropagation(); // Satırın tıklanma olayını (navigate) engellemek için
+    e.stopPropagation();
     if (followLoading[userId]) return;
 
     try {

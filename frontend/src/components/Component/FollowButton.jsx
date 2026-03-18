@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { followUser, unfollowUser } from "../../api/user.api";
 import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 
 export default function FollowButton({ targetUserId, initialIsFollowing }) {
   const { user: currentUser } = useAuth();

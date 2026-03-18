@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPost } from "../../../api/post.api";
 import { useAuth } from "../../../hooks/useAuth";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../hooks/useTheme";
 import { Link } from "react-router-dom";
 
 import FormImagePreview from "../../Component/FormImagePreview";

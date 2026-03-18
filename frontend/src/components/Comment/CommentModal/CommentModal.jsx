@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../hooks/useTheme";
 import { useAuth } from "../../../hooks/useAuth";
 import { formatRelativeTime } from "../../Component/DateInfo";
 import Avatar from "../../Component/Avatar";

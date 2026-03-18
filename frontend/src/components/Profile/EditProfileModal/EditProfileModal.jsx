@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../hooks/useTheme";
 import { updateProfile } from "../../../api/user.api";
 import api from "../../../api/axios";
 import "./EditProfileModal.css";

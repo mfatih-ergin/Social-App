@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const origin = location.state?.from || "/";
 
@@ -83,14 +84,32 @@ export default function LoginPage() {
                 </span>
               )}
             </label>
-            <input
-              type="password"
-              className={`form-control form-control-sm ${password.length > 0 ? (isPasswordLongEnough ? "is-valid" : "") : ""}`}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
+            <div className="position-relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className={`form-control form-control-sm pe-5 ${
+                  password.length > 0
+                    ? isPasswordLongEnough
+                      ? "border-success shadow-none"
+                      : "border-danger shadow-none"
+                    : ""
+                }`}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="btn position-absolute end-0 top-50 translate-middle-y border-0 shadow-none py-0 px-2 text-secondary"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex="-1"
+              >
+                <i
+                  className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"} fs-6`}
+                ></i>
+              </button>
+            </div>
           </div>
 
           <button

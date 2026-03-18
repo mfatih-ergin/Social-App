@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { getCommentsByPostId, getReplies } from "../../api/comment.api";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import { useAuth } from "../../hooks/useAuth";
 import CommentCard from "./CommentCard";
 import Loading from "../Component/Loading";

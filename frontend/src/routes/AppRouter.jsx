@@ -59,7 +59,14 @@ export default function AppRouter() {
           element={<ThreadPage type="comment" />}
         />
         <Route path="/profile/:id" element={<ProfilePage />} />
-        <Route path="/profile/:userId/:type" element={<FollowPage />} />
+        <Route
+          path="/profile/:userId/:type"
+          element={
+            <PrivateRoute>
+              <FollowPage />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/bookmarks"
           element={

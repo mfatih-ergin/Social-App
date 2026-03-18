@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../hooks/useTheme";
 
 import SidebarLogo from "./SidebarLogo";
 import SidebarItem from "./SidebarItem";

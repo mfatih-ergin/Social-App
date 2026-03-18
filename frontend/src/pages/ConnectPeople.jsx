@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../hooks/useTheme";
 import { useAuth } from "../hooks/useAuth";
 import { getAllSuggestions, followUser } from "../api/user.api";
 import Avatar from "../components/Component/Avatar";

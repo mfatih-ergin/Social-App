@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../hooks/useTheme";
 import { formatRelativeTime } from "../../Component/DateInfo";
 import Avatar from "../../Component/Avatar";
 import CardLayout from "../../Layout/CardLayout/CardLayout";
@@ -101,7 +101,11 @@ export default function RepostCard({ post, isComment = false }) {
           )}
 
           {!contentText.trim() && !contentImage && (
-            <p className="small mb-0 text-muted opacity-50 fst-italic">
+            <p
+              className={`small mb-0 fst-italic ${
+                theme === "dark" ? "text-white-50" : "text-muted opacity-50"
+              }`}
+            >
               İçerik boş.
             </p>
           )}

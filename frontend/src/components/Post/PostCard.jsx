@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { deletePost, repostContent, updatePost } from "../../api/post.api";
 import { addComment } from "../../api/comment.api";
 import { followUser } from "../../api/user.api";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import { formatRelativeTime } from "../Component/DateInfo";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -116,7 +116,14 @@ export default function PostCard({ post, onUpdate, isDetailView = false }) {
   const handleDirectRepost = async () => {
     if (!user) return navigate("/login");
     try {
-      await repostContent(post._id, { type: "post" });
+      const targetId = isDirectRepost
+        ? post.parentPost?._id || post.parentComment?._id
+        : post._id;
+
+      const targetType =
+        isDirectRepost && post.parentComment ? "comment" : "post";
+
+      await repostContent(targetId, { type: targetType });
       onUpdate?.();
     } catch (error) {
       console.error("Repost hatası:", error);

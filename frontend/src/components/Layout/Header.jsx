@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import CreateCollectionButton from "../Component/CreateCollectionButton";
 import CollectionOptionsButton from "../Component/CollectionOptionsButton";
 import { getCollections, deleteCollection } from "../../api/collection.api";
@@ -80,6 +80,9 @@ export default function Header() {
         zIndex: 1050,
         height: "75px",
         borderBottom: isDark ? "1px solid #2f3336" : "1px solid #eff3f4",
+        width: "calc(100% - 2px)",
+        marginLeft: "1px",
+        marginRight: "1px",
       }}
     >
       <div className="d-flex align-items-center">

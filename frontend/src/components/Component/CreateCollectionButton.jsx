@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import CreateCollectionModal from "./CreateCollectionModal";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import "./CreateCollectionButton.css";
 
 export default function CreateCollectionButton() {

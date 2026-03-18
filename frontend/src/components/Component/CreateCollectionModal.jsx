@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createCollection } from "../../api/collection.api";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 
 export default function CreateCollectionModal({ isOpen, onClose, onSuccess }) {
   const [name, setName] = useState("");

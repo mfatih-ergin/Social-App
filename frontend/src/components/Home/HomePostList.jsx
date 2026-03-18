@@ -1,5 +1,5 @@
 import PostCard from "../Post/PostCard";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 
 export default function HomePostList({ posts, fetchPosts }) {
   const { theme } = useTheme();

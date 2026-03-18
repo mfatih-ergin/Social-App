@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getExplorePosts } from "../../api/post.api";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import PostCard from "../Post/PostCard";
 import Loading from "../Component/Loading";
 

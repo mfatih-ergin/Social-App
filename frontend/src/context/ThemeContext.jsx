@@ -1,11 +1,26 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-const ThemeContext = createContext();
+import { ThemeContext } from "./ThemeContextInstance";
 
 export function ThemeProvider({ children }) {
   const { user } = useAuth();
+  const location = useLocation();
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+
+  const isAuthPage =
+    location.pathname === "/login" || location.pathname === "/register";
+
+  const activeTheme = user && !isAuthPage ? theme : "light";
+
+  useEffect(() => {
+    if (activeTheme === "dark") {
+      document.body.classList.add("dark-theme");
+    } else {
+      document.body.classList.remove("dark-theme");
+    }
+  }, [activeTheme]);
 
   useEffect(() => {
     if (!user) {
@@ -22,13 +37,9 @@ export function ThemeProvider({ children }) {
     }
   };
 
-  const activeTheme = user ? theme : "light";
-
   return (
     <ThemeContext.Provider value={{ theme: activeTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
-
-export const useTheme = () => useContext(ThemeContext);

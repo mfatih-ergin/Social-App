@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import CollectionButton from "../Component/CollectionButton";
 
 export default function SavedCollections({

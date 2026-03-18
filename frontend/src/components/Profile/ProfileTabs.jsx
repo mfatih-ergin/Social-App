@@ -1,4 +1,4 @@
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 
 export default function ProfileTabs({ activeTab, setActiveTab }) {
   const { theme } = useTheme();

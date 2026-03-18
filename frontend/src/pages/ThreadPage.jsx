@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import PostCard from "../components/Post/PostCard";
 import CommentCard from "../components/Comment/CommentCard";
 import CommentList from "../components/Comment/CommentList";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../hooks/useTheme";
 import Loading from "../components/Component/Loading";
 
 export default function PostPage({ type = "post" }) {

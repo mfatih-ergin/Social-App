@@ -4,7 +4,7 @@ import { getUserPosts } from "../../api/user.api";
 import { getLikedContent } from "../../api/like.api";
 import { getSavedContent } from "../../api/save.api";
 import { getCollections } from "../../api/collection.api";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import PostCard from "../Post/PostCard";
 import CommentCard from "../Comment/CommentCard";
 import SavedCollections from "./SavedCollections";

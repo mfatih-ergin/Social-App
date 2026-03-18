@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../hooks/useTheme";
 import FollowList from "../components/Profile/FollowList";
 
 export default function FollowPage() {

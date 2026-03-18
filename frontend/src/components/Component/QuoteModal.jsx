@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import { useAuth } from "../../hooks/useAuth";
 import Avatar from "../Component/Avatar";
 import FormImagePreview from "../Component/FormImagePreview";

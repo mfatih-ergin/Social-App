@@ -6,7 +6,7 @@ import {
   updatePassword,
 } from "../api/user.api";
 import { useAuth } from "../hooks/useAuth";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../hooks/useTheme";
 import { useNavigate } from "react-router-dom";
 import "../styles/Settings.css";
 
@@ -14,6 +14,8 @@ export default function Settings() {
   const { user, setUser, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("account");
   const [activeDetail, setActiveDetail] = useState("main");
   const navigate = useNavigate();
@@ -293,27 +295,50 @@ export default function Settings() {
                 <h4 className="fw-bold mb-0">Şifreni değiştir</h4>
               </div>
               <form onSubmit={handlePasswordSubmit} className="p-4">
-                <input
-                  type="password"
-                  placeholder="Mevcut şifre"
-                  className="custom-settings-input-standalone mb-3"
-                  value={passData.currentPassword}
-                  onChange={(e) =>
-                    setPassData({
-                      ...passData,
-                      currentPassword: e.target.value,
-                    })
-                  }
-                />
-                <input
-                  type="password"
-                  placeholder="Yeni şifre"
-                  className="custom-settings-input-standalone mb-4"
-                  value={passData.newPassword}
-                  onChange={(e) =>
-                    setPassData({ ...passData, newPassword: e.target.value })
-                  }
-                />
+                <div className="position-relative mb-3">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    placeholder="Mevcut şifre"
+                    className="custom-settings-input-standalone pe-5"
+                    value={passData.currentPassword}
+                    onChange={(e) =>
+                      setPassData({
+                        ...passData,
+                        currentPassword: e.target.value,
+                      })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="btn position-absolute end-0 top-50 translate-middle-y border-0 shadow-none px-3 text-secondary"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  >
+                    <i
+                      className={`bi ${showCurrentPassword ? "bi-eye-slash-fill" : "bi-eye-fill"} fs-6`}
+                    ></i>
+                  </button>
+                </div>
+
+                <div className="position-relative mb-4">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Yeni şifre"
+                    className="custom-settings-input-standalone pe-5"
+                    value={passData.newPassword}
+                    onChange={(e) =>
+                      setPassData({ ...passData, newPassword: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="btn position-absolute end-0 top-50 translate-middle-y border-0 shadow-none px-3 text-secondary"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    <i
+                      className={`bi ${showNewPassword ? "bi-eye-slash-fill" : "bi-eye-fill"} fs-6`}
+                    ></i>
+                  </button>
+                </div>
                 {status.type && (
                   <div
                     className={`alert py-2 border-0 ${status.type === "error" ? "alert-danger" : "alert-success"}`}

@@ -1,4 +1,4 @@
-import { useTheme } from "../../../../context/ThemeContext";
+import { useTheme } from "../../../../hooks/useTheme";
 import "./CommentButton.css";
 
 export default function CommentButton({ commentsCount, onClick }) {

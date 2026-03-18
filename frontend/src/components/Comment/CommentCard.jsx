@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../hooks/useTheme";
 import { formatRelativeTime } from "../Component/DateInfo";
 import { useAuth } from "../../hooks/useAuth";
 
