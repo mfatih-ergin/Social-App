@@ -37,7 +37,7 @@ router.put("/settings/update-username", protect, updateUsername);
 router.put("/settings/update-password", protect, updatePassword);
 router.put("/settings", protect, updateSettings);
 
-router.get("/:id", /*protect,*/ getUserProfile);
+router.get("/:id", protect, getUserProfile);
 router.get("/:userId/userposts", protect, getUserPosts);
 
 router.get("/:userId/followers", protect, getFollowers);

@@ -65,6 +65,12 @@ export default function Header() {
         showBack: true,
       };
     }
+    if (path.includes("/connect_people"))
+      return { title: "Takip Et", showBack: true };
+    if (path.includes("/followers"))
+      return { title: "Takipçiler", showBack: true };
+    if (path.includes("/following"))
+      return { title: "Takip Edilenler", showBack: true };
     return { title: "Detaylar", showBack: true };
   };
 

@@ -26,6 +26,9 @@ export default function FollowPage() {
           backgroundColor: isDark
             ? "rgba(0, 0, 0, 0.75)"
             : "rgba(255, 255, 255, 0.85)",
+          width: "calc(100% - 2px)",
+          marginLeft: "1px",
+          marginRight: "1px",
         }}
       >
         <div
