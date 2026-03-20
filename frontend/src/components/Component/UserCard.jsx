@@ -58,6 +58,8 @@ export default function UserCard({ userId, initialData }) {
   }, []);
 
   useEffect(() => {
+    if (!currentUser || !userId) return;
+
     const fetchUserDetail = async () => {
       try {
         setLoading(true);
@@ -75,7 +77,7 @@ export default function UserCard({ userId, initialData }) {
       }
     };
     if (userId) fetchUserDetail();
-  }, [userId]);
+  }, [userId, currentUser]);
 
   const handleFollowClick = async (e) => {
     e.preventDefault();
@@ -93,6 +95,10 @@ export default function UserCard({ userId, initialData }) {
       console.error("Takip hatası:", error);
     }
   };
+
+  if (!currentUser || !userId) {
+    return null;
+  }
 
   return (
     <div
